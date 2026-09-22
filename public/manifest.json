@@ -1,0 +1,41 @@
+{
+  "name": "Flores247 - Benefits Portal",
+  "short_name": "Flores247",
+  "description": "Access your Flores benefits account. Manage FSA, HSA, and HRA plans, file claims, and view balances.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0099D8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/flores.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-light-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-dark-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["finance", "business", "productivity"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
+
+
+
+
+
