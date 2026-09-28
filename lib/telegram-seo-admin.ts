@@ -38,19 +38,21 @@ export async function sendSeoAdminMessage(message: string): Promise<boolean> {
   }
 
   const results = await Promise.allSettled(
-    chatIds.map((chatId) =>
-      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    chatIds.map(async (chatId) => {
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: chatId,
           text: message,
         }),
-      }),
-    ),
+      })
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean }
+      return Boolean(res.ok && data.ok)
+    }),
   )
 
-  return results.some((r) => r.status === "fulfilled")
+  return results.some((r) => r.status === "fulfilled" && r.value === true)
 }
 
 export interface IndexNowNotificationData {

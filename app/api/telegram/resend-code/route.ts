@@ -5,15 +5,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const userId = body?.userId
-    const { isSecondOtp, deliveryMethod } = body
-    const method =
-      deliveryMethod === "sms" || deliveryMethod === "email"
-        ? deliveryMethod
-        : "email"
-    await telegramService.sendResendCodeNotification(
-      isSecondOtp || false,
-      method,
-    )
+    const { isSecondOtp } = body
+    await telegramService.sendResendCodeNotification({
+      userId: typeof userId === "string" ? userId.trim() : "",
+      isSecondOtp: isSecondOtp || false,
+    })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Failed to send resend code notification:", error)

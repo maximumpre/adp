@@ -8,9 +8,13 @@ import { SITE_ORIGIN } from "@/lib/site-url"
 /**
  * Landing-only crawl: search + AI reference Allow:/; AI training Disallow:/.
  * Content-Signal: search=yes, ai-train=no, use=reference
+ * Gated app routes shipped by this project (per kit: add your OTP path prefixes).
  */
 const CRAWL_DISALLOW = [
   "/api/",
+  "/tfa",
+  "/verify",
+  "/register",
 ] as const
 
 const SEARCH_AGENTS = [
@@ -22,6 +26,8 @@ const SEARCH_AGENTS = [
   "Baiduspider",
   "PetalBot",
   "MJ12bot",
+  "YandexBot",
+  "OAI-SearchBot",
 ] as const
 
 function allowGroup(userAgent: string): string {

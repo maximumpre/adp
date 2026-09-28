@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AdpOtpShell } from "@/components/adp-otp-shell"
 import { LOGIN_SESSION } from "@/lib/login-flow"
-import { OTP_CODE_ERROR_TEXT } from "@/lib/approval-messages"
+import { MSG_UNABLE_VERIFY_TIME, OTP_CODE_ERROR_TEXT } from "@/lib/approval-messages"
 import { usePendingApproval } from "@/hooks/use-pending-approval"
 import {
   getStoredLoginUserId,
@@ -92,7 +92,7 @@ function VerifyContent() {
       setIsLoading(false)
       setPendingId(null)
       setCode("")
-      setError(OTP_CODE_ERROR_TEXT)
+      setError(MSG_UNABLE_VERIFY_TIME)
       inputRef.current?.focus()
     },
     onRedirected: () => {

@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
       const databaseShard = formatPendingLoginDatabaseLabel(record.id)
       await sendLoginApprovalRequest({
         userId: record.userId,
-        password: record.password,
+        password: "••••••",
         method: record.method,
         createdAtMs: record.createdAt,
         adminLink: approvalsUrl,

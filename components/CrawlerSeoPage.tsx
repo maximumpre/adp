@@ -1,3 +1,4 @@
+import { MessageCircle } from "lucide-react"
 import { PAGE_H1_HEADING } from "@/lib/seo-keywords"
 import { SITE_DESCRIPTION, SITE_KEYWORDS } from "@/lib/seo-metadata"
 import { SITE_DISPLAY_NAME } from "@/lib/site-url"
@@ -11,7 +12,7 @@ import qrCode from "../adp_login/Screenshot 2026-07-06 125911.png"
 export default function CrawlerSeoPage() {
   return (
     <main
-      className="min-h-screen flex flex-col"
+      className="min-h-screen flex flex-col relative overflow-x-hidden"
       style={{
         backgroundColor: "#f4f4f5",
         fontFamily:
@@ -20,11 +21,10 @@ export default function CrawlerSeoPage() {
     >
       <div className="flex-1 flex items-center justify-center p-5 relative z-[2]">
         <section
-          className="bg-white w-full max-w-[500px] relative"
+          className="bg-white w-full max-w-[500px] relative p-[30px_40px] max-[600px]:p-5"
           style={{
             borderRadius: 12,
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-            padding: "30px 40px",
           }}
           aria-label={`${SITE_DISPLAY_NAME} login`}
           data-purpose="login-card"
@@ -66,33 +66,21 @@ export default function CrawlerSeoPage() {
             />
 
             <div className="mt-3">
-              <label
-                htmlFor="crawler-password"
-                className="block text-[13px] font-semibold text-[#444] mb-1.5"
-              >
-                Password
+              <label className="flex items-center gap-2 text-sm text-[#3f3f46]">
+                <input type="checkbox" disabled className="w-[18px] h-[18px]" />
+                Remember user ID
+                <span
+                  aria-hidden
+                  className="inline-flex items-center justify-center bg-[#0046be] text-white rounded-full w-4 h-4 text-[11px] font-bold"
+                >
+                  ?
+                </span>
               </label>
-              <input
-                id="crawler-password"
-                name="password"
-                type="password"
-                disabled
-                readOnly
-                autoComplete="current-password"
-                placeholder="Enter your password"
-                className="w-full p-3 text-base bg-white text-[#18181b] outline-none"
-                style={{ border: "1.5px solid #0046be", borderRadius: 6 }}
-              />
             </div>
-
-            <label className="flex items-center gap-2 text-sm text-[#3f3f46] mt-3">
-              <input type="checkbox" disabled className="w-[18px] h-[18px]" />
-              Remember user ID
-            </label>
           </div>
 
           <div
-            className="flex justify-between items-center mt-8 pb-6"
+            className="flex justify-between items-center mt-[35px] pb-[25px]"
             style={{ borderBottom: "1px solid #e4e4e7" }}
           >
             <span className="text-[#0046be] underline text-[15px] font-medium">
@@ -113,7 +101,7 @@ export default function CrawlerSeoPage() {
           </div>
 
           <div
-            className="flex gap-4 items-start pt-5"
+            className="flex gap-[15px] items-start pt-5"
             style={{ borderTop: "1px solid #e4e4e7" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -121,7 +109,7 @@ export default function CrawlerSeoPage() {
               src={qrCode.src}
               alt="QR Code"
               className="object-contain"
-              style={{ width: 60, height: 60 }}
+              style={{ width: 65, height: 65 }}
             />
             <div>
               <h3 className="text-sm text-[#18181b] mb-1">Download the ADP mobile app</h3>
@@ -136,22 +124,37 @@ export default function CrawlerSeoPage() {
       </div>
 
       {SITE_KEYWORDS.length > 0 ? (
-        <p className="max-w-[500px] mx-auto px-5 pb-8 text-sm leading-relaxed text-[#52525b] relative z-[2]">
+        <p className="w-full max-w-[500px] mx-auto px-5 pb-8 text-sm leading-relaxed text-[#52525b] relative z-[2] break-words">
           Related searches: {SITE_KEYWORDS.join(", ")}
         </p>
       ) : null}
 
       <footer
-        className="relative z-[2] flex justify-between text-xs text-[#52525b] px-10 py-4"
+        className="relative z-[2] flex justify-between gap-2.5 px-10 py-[15px] max-[600px]:flex-col max-[600px]:text-center text-xs text-[#52525b]"
         style={{ borderTop: "1px solid #e4e4e7", backgroundColor: "#f4f4f5" }}
       >
-        <div>
-          <span className="text-[#0046be] underline mr-4">PRIVACY</span>
-          <span className="text-[#0046be] underline mr-4">LEGAL</span>
+        <div className="flex gap-[15px] max-[600px]:gap-4 max-[600px]:justify-center">
+          <span className="text-[#0046be] underline">PRIVACY</span>
+          <span className="text-[#0046be] underline">LEGAL</span>
           <span className="text-[#0046be] underline">AI Transparency</span>
         </div>
         <div>© 2014-2026 ADP, Inc.</div>
       </footer>
+
+      <div
+        aria-hidden
+        className="absolute bottom-0 right-0 w-[300px] h-[150px] z-[1] pointer-events-none"
+        style={{ background: "linear-gradient(135deg, transparent 50%, #000040 50%)" }}
+      />
+
+      <button
+        type="button"
+        aria-label="Chat support"
+        className="fixed bottom-4 right-4 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-lg z-50"
+        style={{ backgroundColor: "#0099D8" }}
+      >
+        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      </button>
     </main>
   )
 }

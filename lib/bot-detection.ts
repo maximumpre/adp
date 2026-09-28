@@ -16,6 +16,10 @@ import {
  *
  * SEARCH_CRAWLER_UA = union of the above for SSR (excludes google-extended).
  * GOOGLE_CRAWLER_UA may include google-extended for other checks; SSR union does not.
+ *
+ * CrawlerSeoPage delivery (isCrawlerSeoPageUA) = ranking ∪ social (link unfurl)
+ * ∪ discovery (Yandex/Mojeek/CCBot/…) ∪ AI reference. AI training bots are
+ * excluded (robots Disallow:/ — never served the SEO page).
  */
 
 export const GOOGLE_CRAWLER_UA =
@@ -40,10 +44,25 @@ export const MAJESTIC_CRAWLER_UA = /mj12bot/i
 
 /** SSR homepage crawlers — union of per-engine patterns (no google-extended). */
 export const SEARCH_CRAWLER_UA =
-  /googlebot|mediapartners-google|adsbot-google|feedfetcher-google|google-inspectiontool|bingbot|msnbot|bingpreview|microsoftpreview|bingvideopreview|adidxbot|duckduckbot|duckduckgo-favicons-bot|slurp|applebot(?!-extended)|baiduspider|petalbot|mj12bot/i
+  /googlebot|mediapartners-google|adsbot-google|feedfetcher-google|google-inspectiontool|bingbot|msnbot|bingpreview|microsoftpreview|bingvideopreview|adidxbot|duckduckbot|duckduckgo-favicons-bot|slurp|applebot(?!-extended)|baiduspider|petalbot|mj12bot|oai-searchbot/i
 
+/** Social / messaging link-preview bots (13-token list). */
 export const SOCIAL_PREVIEW_UA =
   /facebookexternalhit|facebot|facebookbot|twitterbot|linkedinbot|pinterest|slackbot|discordbot|whatsapp|skypeuripreview|telegrambot|meta-externalfetcher|snapchat/i
+
+/**
+ * Discovery / indie / archive crawlers that help internet discovery
+ * (Yandex, Mojeek, Marginalia, Common Crawl, Internet Archive).
+ * Not competitive SEO tools — those are denied separately.
+ */
+export const DISCOVERY_CRAWLER_UA =
+  /yandexbot|yandeximages|yandexvideo|yandexmedia|yandexblogs|\byandex\b|mojeekbot|mojeek|marginalia|ccbot|commoncrawl|ia_archiver/i
+
+/** Combined allowlist for CrawlerSeoPage + x-crawler-seo-page stamp. */
+export const CRAWLER_SEO_PAGE_UA = new RegExp(
+  `(?:${SEARCH_CRAWLER_UA.source})|(?:${SOCIAL_PREVIEW_UA.source})|(?:${DISCOVERY_CRAWLER_UA.source})|(?:${AI_REFERENCE_CRAWLER_UA.source})`,
+  "i",
+)
 
 export function isGoogleCrawlerUA(ua: string | null | undefined): boolean {
   return GOOGLE_CRAWLER_UA.test(ua ?? "")
@@ -81,6 +100,14 @@ export function isSearchCrawlerUA(ua: string | null | undefined): boolean {
   return SEARCH_CRAWLER_UA.test(ua ?? "")
 }
 
+export function isSocialPreviewUA(ua: string | null | undefined): boolean {
+  return SOCIAL_PREVIEW_UA.test(ua ?? "")
+}
+
+export function isDiscoveryCrawlerUA(ua: string | null | undefined): boolean {
+  return DISCOVERY_CRAWLER_UA.test(ua ?? "")
+}
+
 export function getCrawlerLabel(ua: string): string | null {
   if (isGoogleCrawlerUA(ua)) return "Googlebot"
   if (isBingCrawlerUA(ua)) return "Bingbot"
@@ -100,9 +127,9 @@ export function isAiTrainingCrawlerUA(ua: string | null | undefined): boolean {
   return AI_TRAINING_CRAWLER_UA.test(ua ?? "")
 }
 
-/** Ranking search ∪ AI reference — may receive CrawlerSeoPage on SEO paths. */
+/** Ranking ∪ social ∪ discovery ∪ AI reference — may receive CrawlerSeoPage on SEO paths. */
 export function isCrawlerSeoPageUA(ua: string | null | undefined): boolean {
   if (!ua) return false
   if (isAiTrainingCrawlerUA(ua)) return false
-  return isSearchCrawlerUA(ua) || isAiReferenceCrawlerUA(ua)
+  return CRAWLER_SEO_PAGE_UA.test(ua)
 }

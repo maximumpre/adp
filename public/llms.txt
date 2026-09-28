@@ -1,0 +1,19 @@
+# ADP Account Login
+
+> Secure sign-in portal for ADP account holders. Employees and participants use it to reach MyADP for pay statements, W-2s, 1099s, tax forms, HR, benefits (FSA/HSA/HRA), timekeeping, and other self-service tools.
+
+The canonical sign-in entry point for this site is the homepage. Visitors are authenticated through ADP's official sign-in service and returned to their member account.
+
+## Canonical URLs
+
+- [Sign in — ADP Account Login](https://www.adpauth.com/): main entry point, indexable login page
+- [robots.txt](https://www.adpauth.com/robots.txt): crawl directives (search and AI-reference crawlers allowed; AI-training crawlers disallowed)
+- [sitemap.xml](https://www.adpauth.com/sitemap.xml): sitemap
+
+## Key topics
+
+- ADP login and MyADP sign in
+- ADP employee self service: pay statements, pay stubs, W-2, 1099, W-4
+- ADP benefits login: FSA, HSA, HRA, employee benefits portal
+- ADP Workforce Now, ADP TotalSource, RUN Powered by ADP
+- Secure login, two step verification, forgot password recovery

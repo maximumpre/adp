@@ -1,12 +1,13 @@
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/lib/seo-metadata"
 import {
-  CANONICAL_HOST,
   SITE_DISPLAY_NAME,
   SITE_HOMEPAGE_CANONICAL,
   SITE_ORIGIN,
   ogImageAbsoluteUrl,
 } from "@/lib/site-url"
 
+// SEO_SITE_NAMES.md: alternateName carries brand/search aliases only —
+// never domain or hostname tokens (anti-degradation rule).
 const SCHEMA_ALTERNATE_NAMES = [
   `${SITE_DISPLAY_NAME} login`,
   "MyADP",
@@ -15,7 +16,6 @@ const SCHEMA_ALTERNATE_NAMES = [
   "Sign in to ADP",
   "ADP benefits login",
   "ADP employee login",
-  CANONICAL_HOST.toLowerCase(),
 ] as const
 
 /**

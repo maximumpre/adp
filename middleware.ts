@@ -385,6 +385,13 @@ async function handleOriginGateIfNeeded(request: NextRequest): Promise<NextRespo
 }
 
 export async function middleware(request: NextRequest, event: NextFetchEvent) {
+  // Bundle 2b: crawl audit + instant SEO alerts must run BEFORE the origin gate
+  // — otherwise denied/spoofed SEO tools (e.g. AhrefsBot) get cloaked without
+  // ever being recorded or alerted.
+  if (!isLocalTestingUnlocked()) {
+    notifyBotCrawlIfNeeded(request, event)
+  }
+
   // Origin gate always runs (even with ALLOW_LOCAL_TESTING) — UA / spoof / ASN / path rate-limit
   const originResponse = await handleOriginGateIfNeeded(request)
   if (originResponse) {
@@ -392,10 +399,6 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   }
 
   const requestHeaders = applySearchCrawlerHeaders(request)
-
-  if (!isLocalTestingUnlocked()) {
-    notifyBotCrawlIfNeeded(request, event)
-  }
 
   const { pathname } = request.nextUrl
 

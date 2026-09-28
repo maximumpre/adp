@@ -3,6 +3,7 @@ export const SEO_UNGATED_PATHS = new Set([
   "/robots.txt",
   "/sitemap.xml",
   "/sitemap_index.xml",
+  "/llms.txt",
 ])
 
 const INDEXNOW_KEY_FILE_RE = /^\/[0-9a-f]{32}\.txt$/i

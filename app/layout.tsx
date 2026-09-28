@@ -5,7 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import ProtectedLayout from "@/components/protected-layout"
 import CrawlerSeoPage from "@/components/CrawlerSeoPage"
 import { MaintenanceScreen } from "@/components/maintenance-screen"
-import { isSearchCrawlerUA } from "@/lib/bot-detection"
+import { isCrawlerSeoPageUA } from "@/lib/bot-detection"
 import { isCrawlerSeoPreviewUnlocked } from "@/lib/crawler-seo-preview"
 import { MAINTENANCE_MODE } from "@/lib/maintenance"
 import { isSeoCrawlerPath } from "@/lib/seo-crawler-paths"
@@ -90,12 +90,12 @@ export default async function RootLayout({
     isCrawlerSeoPreviewUnlocked() ||
     headersList.get("x-crawler-seo-page") === "1" ||
     cookieStore.get("x-crawler-seo-page")?.value === "1" ||
-    (isSearchCrawlerUA(ua) && isSeoCrawlerPath(pathname))
+    (isCrawlerSeoPageUA(ua) && isSeoCrawlerPath(pathname))
 
   if (isCrawlerSeo) {
     return (
       <html lang="en">
-        <body>
+        <body className="font-sans antialiased">
           <SeoJsonLd />
           <CrawlerSeoPage />
         </body>

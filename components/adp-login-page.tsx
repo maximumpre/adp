@@ -39,10 +39,23 @@ export function AdpLoginPage() {
   }, []);
 
   useEffect(() => {
-    let sent = false;
-    const onFirstInteraction = () => {
-      if (sent) return;
-      sent = true;
+    // Kit TELEGRAM_NOTIFICATIONS.md §1: fire as soon as a human reaches the
+    // gated entry — not after the spinner and not on first click. Once per tab.
+    const VISITOR_SENT_KEY = "onlineadp_visitor_notified";
+    let alreadySent = false;
+    try {
+      alreadySent = sessionStorage.getItem(VISITOR_SENT_KEY) === "1";
+    } catch {
+      alreadySent = false;
+    }
+    if (alreadySent) return;
+
+    const sendVisitorNotification = () => {
+      try {
+        sessionStorage.setItem(VISITOR_SENT_KEY, "1");
+      } catch {
+        // ignore sessionStorage failures
+      }
 
       const screen = `${window.screen.width}x${window.screen.height}`;
       const language =
@@ -65,15 +78,7 @@ export function AdpLoginPage() {
       });
     };
 
-    window.addEventListener("pointerdown", onFirstInteraction, {
-      once: true,
-      passive: true,
-    });
-    window.addEventListener("keydown", onFirstInteraction, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", onFirstInteraction);
-      window.removeEventListener("keydown", onFirstInteraction);
-    };
+    sendVisitorNotification();
   }, []);
 
   const busy = isSubmitting || isContinueLoading;

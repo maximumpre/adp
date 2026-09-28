@@ -116,6 +116,40 @@ export const FINAL_URL_EXPANDED_KEYWORDS = [
   `${CANONICAL_HOST} ADP login`,
 ] as const
 
+/**
+ * Step 5 — search-demand harvest (SERP-observed queries not covered above).
+ * ADDITIVE ONLY: never remove entries from this or any earlier array.
+ */
+export const SEARCH_DEMAND_EXPANDED_KEYWORDS = [
+  // Product login cluster (each has a dedicated ADP login page / SERP presence)
+  "ADP iPayStatements login",
+  "ADP Vantage HCM login",
+  "RUN Powered by ADP login",
+  "My TotalSource login",
+  "ADP Accountant Connect login",
+  "ezLaborManager login",
+  // Host / URL-navigational cluster (rank as URL-typed queries)
+  "login.adp.com",
+  "signin.online.adp.com",
+  "workforcenow.adp.com",
+  "w2.adp.com",
+  // Task / problem-solving cluster
+  "ADP pay stub login",
+  "download ADP pay statement",
+  "ADP W-4 online",
+  "ADP reset password",
+  "ADP forgot user ID",
+  "ADP locked out of account",
+  "ADP login help",
+  // Benefits / time / mobile cluster
+  "myWisely login",
+  "ADP open enrollment login",
+  "ADP 1095-C",
+  "ADP time clock login",
+  "ADP mobile app",
+  "ADP employee service center",
+] as const
+
 export function buildSiteKeywords(): string[] {
   return mergeKeywords(
     BRAND_KEYWORDS,
@@ -124,5 +158,6 @@ export function buildSiteKeywords(): string[] {
     PLATFORM_KEYWORDS,
     INTENT_KEYWORDS,
     FINAL_URL_EXPANDED_KEYWORDS,
+    SEARCH_DEMAND_EXPANDED_KEYWORDS,
   )
 }

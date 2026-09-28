@@ -87,7 +87,6 @@ if (!layout) {
 
   const hasUaFallback =
     /isCrawlerSeoPageUA/.test(text) ||
-    /isSearchCrawlerUA/.test(text) ||
     /x-is-search-crawler/.test(text) ||
     (/SEARCH_CRAWLER_UA|CRAWLER_SEO_PAGE_UA/.test(text) &&
       /isSeoCrawlerPath|SEO_CRAWLER_PATHS/.test(text))
@@ -128,6 +127,24 @@ if (libBot && !/isCrawlerSeoPageUA/.test(libBot.text)) {
 }
 if (libBot && !/SOCIAL_PREVIEW_UA|DISCOVERY_CRAWLER_UA/.test(libBot.text)) {
   failures.push(`${libBot.rel}: missing SOCIAL_PREVIEW_UA / DISCOVERY_CRAWLER_UA`)
+}
+// The union must exist AND isCrawlerSeoPageUA must actually test it
+// (identifier-only presence let a search∪AI-only implementation pass before).
+if (libBot && !/CRAWLER_SEO_PAGE_UA/.test(libBot.text)) {
+  failures.push(
+    `${libBot.rel}: missing CRAWLER_SEO_PAGE_UA union (search ∪ social ∪ discovery ∪ AI reference)`,
+  )
+}
+if (libBot && !/isCrawlerSeoPageUA[\s\S]{0,240}CRAWLER_SEO_PAGE_UA\.test/.test(libBot.text)) {
+  failures.push(
+    `${libBot.rel}: isCrawlerSeoPageUA must test CRAWLER_SEO_PAGE_UA (social/discovery bots were excluded)`,
+  )
+}
+// Social (13-token) + discovery buckets must be members of the union source.
+if (libBot && !/SOCIAL_PREVIEW_UA\.source[\s\S]{0,200}DISCOVERY_CRAWLER_UA\.source/.test(libBot.text)) {
+  failures.push(
+    `${libBot.rel}: CRAWLER_SEO_PAGE_UA must include SOCIAL_PREVIEW_UA + DISCOVERY_CRAWLER_UA sources`,
+  )
 }
 
 const deniedBots = readIfExists([
