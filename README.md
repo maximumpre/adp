@@ -2,6 +2,14 @@
 
 ## Changelog
 
+### 2026-09-28 — Step 6: Domain Origin & IndexNow Deployment (adpauth.com)
+- Configured canonical origin `SITE_ORIGIN = "https://www.adpauth.com"` and host `CANONICAL_HOST = "www.adpauth.com"` in `lib/site-url.ts`.
+- Set production IndexNow key `3a43d612bc8e4666ab867f53bb90557a` in `lib/site-url.ts` and generated public verification file `public/3a43d612bc8e4666ab867f53bb90557a.txt`.
+- Purged stale key file `public/c017360589d54b4b83941aea83c17531.txt`.
+- Seeded `env.example` documenting SEO Admin Telegram environment requirements on Vercel Build env.
+- Updated domain-specific search keyword catalog in `lib/seo-keywords.ts` to `adpauth.com`.
+- Verified clean passage of `check-canonical-domain.mjs`, `check-indexnow-key.mjs`, and executed live postbuild IndexNow submission test (`HTTP 202`).
+
 ### 2026-09-28 — Step 4: Steins Gate Parity & Referrer Gate Lockdown
 - Fortified `lib/local-testing.ts` to strictly enforce `ALLOW_LOCAL_TESTING=true` requirement, removing auto-localhost bypass so local testing is never unintentionally unlocked.
 - Updated `components/protected-layout.tsx` to strictly exclude denied bots (`!isDeniedBotUserAgent(userAgent) && isCrawlerSeoPageUA(userAgent)`) from human children access.

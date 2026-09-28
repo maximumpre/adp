@@ -1,7 +1,7 @@
 /** Display name for notifications and metadata. */
 export const SITE_DISPLAY_NAME = "ADP Account Login" as const
 
-export const SITE_ORIGIN = "https://www.adpaccount.com" as const
+export const SITE_ORIGIN = "https://www.adpauth.com" as const
 
 /** @deprecated Use SITE_ORIGIN — kept for middleware host redirect imports. */
 export const SITE_URL = SITE_ORIGIN
@@ -12,9 +12,10 @@ export const SITE_SITEMAP_URL = `${SITE_ORIGIN}/sitemap.xml` as const
 
 export const CANONICAL_HOST = new URL(SITE_ORIGIN).hostname
 
-export const INDEXNOW_KEY = "c017360589d54b4b83941aea83c17531" as const
+export const INDEXNOW_KEY =
+  process.env.INDEXNOW_KEY?.trim() ?? "3a43d612bc8e4666ab867f53bb90557a"
 
-export const SITE_CONTENT_UPDATED_AT = "2026-08-15" as const
+export const SITE_CONTENT_UPDATED_AT = "2026-09-28" as const
 
 export function canonicalUrlForPath(pathname: string): string {
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`
