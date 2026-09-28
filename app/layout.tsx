@@ -13,23 +13,24 @@ import { SeoJsonLd } from "@/components/seo-json-ld"
 import { INDEXABLE_PAGE_ROBOTS } from "@/lib/seo-robots-metadata"
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_TITLE } from "@/lib/seo-metadata"
 import {
-  OG_IMAGE,
   SITE_DISPLAY_NAME,
   SITE_HOMEPAGE_CANONICAL,
   SITE_ORIGIN,
-  ogImageAbsoluteUrl,
 } from "@/lib/site-url"
 import "./globals.css"
 
+const SOCIAL_PREVIEW_IMAGE = "/og-image.png"
+const OG_IMAGE_URL = new URL(SOCIAL_PREVIEW_IMAGE, SITE_HOMEPAGE_CANONICAL).href
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
-  title: {
-    default: SITE_TITLE,
-    template: `%s | ${SITE_DISPLAY_NAME}`,
-  },
+  title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   keywords: SITE_KEYWORDS,
   applicationName: SITE_DISPLAY_NAME,
+  authors: [{ name: SITE_DISPLAY_NAME }],
+  creator: SITE_DISPLAY_NAME,
+  publisher: SITE_DISPLAY_NAME,
   robots: INDEXABLE_PAGE_ROBOTS,
   alternates: {
     canonical: SITE_HOMEPAGE_CANONICAL,
@@ -55,10 +56,10 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: OG_IMAGE.url,
-        width: OG_IMAGE.width,
-        height: OG_IMAGE.height,
-        alt: OG_IMAGE.alt,
+        url: OG_IMAGE_URL,
+        width: 1200,
+        height: 630,
+        alt: `${SITE_DISPLAY_NAME} sign-in`,
       },
     ],
   },
@@ -66,7 +67,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: [ogImageAbsoluteUrl()],
+    images: [OG_IMAGE_URL],
   },
 }
 

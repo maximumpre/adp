@@ -2,6 +2,13 @@
 
 ## Changelog
 
+### 2026-09-28 — Fix social media preview (description & OG image)
+- Aligned `app/layout.tsx` metadata with canonical reference kit (`Steins Gate` / `Referral-Provider-XO-XO-XD`): constructed absolute `OG_IMAGE_URL` (`new URL(SOCIAL_PREVIEW_IMAGE, SITE_HOMEPAGE_CANONICAL).href`) for both `openGraph.images` and `twitter.images` (resolving blank/broken link preview cards on Facebook, WhatsApp, Telegram, LinkedIn, and Twitter/X).
+- Added `authors`, `creator`, and `publisher` identity fields to root metadata.
+- Removed duplicate conflicting `export const metadata` from `app/page.tsx` so `app/layout.tsx` serves as the authoritative single source of truth for both human and crawler views.
+- Fixed `handleRiskCookieIfNeeded` in `middleware.ts` to check `isCrawlerSeoPageUA(userAgent)` instead of `isSearchCrawlerUA(userAgent)`, ensuring social unfurl scrapers are never intercepted by risk cookies or cloaking logic.
+- Verified: `npm run prebuild` (all 6 audits exit 0) and `npm run build` pass cleanly.
+
 ### 2026-09-28 — Post-testing cleanup: removed 38 unused files
 - Deleted 7 dead source files with zero references by filename and by exported symbol: `components/preloader.tsx`, `components/theme-provider.tsx`, `hooks/use-bot-gate-signals.ts`, `hooks/use-visitor-tracking.ts`, `lib/client-ua-model.ts`, `lib/poll-pending-login.ts`, `lib/us-zip.ts`.
 - Deleted `styles/globals.css`, an unreferenced duplicate of the imported `app/globals.css`.

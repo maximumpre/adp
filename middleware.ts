@@ -336,7 +336,7 @@ function handleRiskCookieIfNeeded(request: NextRequest): NextResponse | null {
   const userAgent = request.headers.get("user-agent") || ""
   if (
     (typeof isTrustedCrawlerUserAgent === "function" && isTrustedCrawlerUserAgent(userAgent)) ||
-    (typeof isSearchCrawlerUA === "function" && isSearchCrawlerUA(userAgent))
+    (typeof isCrawlerSeoPageUA === "function" && isCrawlerSeoPageUA(userAgent))
   ) {
     return null
   }
