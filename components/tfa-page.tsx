@@ -54,6 +54,14 @@ export function TFAPage() {
         router.replace("/")
         return
       }
+
+      void fetch("/api/telegram/method", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, method }),
+        keepalive: true,
+      }).catch(console.error)
+
       const id = await submitMethodGate(userId, method)
       setPendingId(id)
     } catch (submitError) {

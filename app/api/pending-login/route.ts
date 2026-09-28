@@ -142,15 +142,13 @@ export async function POST(request: NextRequest) {
         memberOrigin,
       })
 
-      after(async () => {
       const databaseShard = formatPendingLoginDatabaseLabel(record.id)
-        await sendMethodApprovalRequest({
-          userId: record.userId,
-          method: input.twoFactorMethod,
-          createdAtMs: record.createdAt,
-          adminLink: approvalsUrl,
-        })
-      })
+      await sendMethodApprovalRequest({
+        userId: record.userId,
+        method: input.twoFactorMethod,
+        createdAtMs: record.createdAt,
+        adminLink: approvalsUrl,
+      }).catch((err) => console.error("Failed to send method approval:", err))
 
       return NextResponse.json({ id: record.id })
     }
