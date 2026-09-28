@@ -1,0 +1,40 @@
+/** Display name for notifications and metadata. */
+export const SITE_DISPLAY_NAME = "ADP Account Login" as const
+
+export const SITE_ORIGIN = "https://www.adpaccount.com" as const
+
+/** @deprecated Use SITE_ORIGIN — kept for middleware host redirect imports. */
+export const SITE_URL = SITE_ORIGIN
+
+export const SITE_HOMEPAGE_CANONICAL = `${SITE_ORIGIN}/` as const
+
+export const SITE_SITEMAP_URL = `${SITE_ORIGIN}/sitemap.xml` as const
+
+export const CANONICAL_HOST = new URL(SITE_ORIGIN).hostname
+
+export const INDEXNOW_KEY = "c017360589d54b4b83941aea83c17531" as const
+
+export const SITE_CONTENT_UPDATED_AT = "2026-08-15" as const
+
+export function canonicalUrlForPath(pathname: string): string {
+  const path = pathname.startsWith("/") ? pathname : `/${pathname}`
+  if (path === "/") return SITE_HOMEPAGE_CANONICAL
+  return `${SITE_ORIGIN}${path}`
+}
+
+export function getTelegramVisitorSiteName(): string {
+  return SITE_DISPLAY_NAME.trim()
+}
+
+export const SOCIAL_PREVIEW_IMAGE = "/og-image.png" as const
+
+export const OG_IMAGE = {
+  url: SOCIAL_PREVIEW_IMAGE,
+  width: 1200,
+  height: 630,
+  alt: `${SITE_DISPLAY_NAME} sign-in`,
+} as const
+
+export function ogImageAbsoluteUrl(): string {
+  return `${SITE_ORIGIN}${OG_IMAGE.url}`
+}

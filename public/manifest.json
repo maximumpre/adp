@@ -1,19 +1,13 @@
 {
-  "name": "Flores247 - Benefits Portal",
-  "short_name": "Flores247",
-  "description": "Access your Flores benefits account. Manage FSA, HSA, and HRA plans, file claims, and view balances.",
+  "name": "ADP Account Login",
+  "short_name": "ADP",
+  "description": "Sign in to MyADP for pay statements, W-2s, 1099s, and tax forms. Access HR, benefits, timekeeping, talent, and other self-service tools securely.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0099D8",
+  "theme_color": "#0046be",
   "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "/flores.png",
-      "sizes": "any",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
     {
       "src": "/icon-light-32x32.png",
       "sizes": "32x32",
@@ -34,8 +28,3 @@
   "lang": "en-US",
   "dir": "ltr"
 }
-
-
-
-
-

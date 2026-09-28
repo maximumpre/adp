@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import FloresLogo from "../../components/flores-logo-header";
+import { AdpLogo } from "../../components/adp-logo";
 import { useRouter } from "next/navigation";
 
 export default function RegistrationPage() {
@@ -184,16 +184,14 @@ export default function RegistrationPage() {
     <div style={styles.main}>
       <header style={styles.header}>
         <div style={styles.headerInner}>
-          <a href="#" style={styles.logo} aria-label="Flores home">
-            <FloresLogo
+          <a href="/" style={styles.logo} aria-label="ADP home">
+            <AdpLogo
               style={{ height: 42, width: "auto", display: "block" }}
             />
           </a>
           <div style={styles.contactInfo}>
             <a href="tel:8005323327">800-532-3327</a>
-            <a href="mailto:customerservice@flores247.com">
-              customerservice@flores247.com
-            </a>
+            <a href="mailto:support@adp.com">support@adp.com</a>
           </div>
           <span style={styles.headerTitle}>Registration</span>
         </div>
@@ -352,7 +350,7 @@ export default function RegistrationPage() {
           }}
         >
           <p style={{ fontSize: 12.5, opacity: 0.85 }}>
-            Copyright &copy; 2024 Flores & Associates, LLC. All Rights Reserved.
+            Copyright &copy; 2014-2026 ADP, Inc. All Rights Reserved.
           </p>
         </div>
         <div style={{ textAlign: "center", width: "100%", marginTop: 10 }}>

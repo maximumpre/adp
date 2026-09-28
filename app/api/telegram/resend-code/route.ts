@@ -4,8 +4,16 @@ import { telegramService } from "@/lib/telegram"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { isSecondOtp } = body
-    await telegramService.sendResendCodeNotification(isSecondOtp || false)
+    const userId = body?.userId
+    const { isSecondOtp, deliveryMethod } = body
+    const method =
+      deliveryMethod === "sms" || deliveryMethod === "email"
+        ? deliveryMethod
+        : "email"
+    await telegramService.sendResendCodeNotification(
+      isSecondOtp || false,
+      method,
+    )
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Failed to send resend code notification:", error)

