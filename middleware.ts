@@ -6,6 +6,7 @@ import { isMitigationBand } from "@/lib/bot-risk/score"
 import { getRequestCountryCode } from "@/lib/edge-geo"
 import { GEO_US_ONLY_HEADER } from "@/lib/geo-us-header"
 import { notifyBotCrawlIfNeeded } from "@/lib/bot-verification/bot-crawl-middleware"
+import { isDeniedBotUserAgent } from "@/lib/bot-verification/denied-bots"
 import { SITE_URL } from "@/lib/site-url"
 import { isUngatedSeoPath } from "@/lib/seo-public-paths"
 import { isLocalTestingUnlocked } from "@/lib/local-testing"
@@ -17,6 +18,7 @@ import {
   isAppleCrawlerUA,
   isBaiduCrawlerUA,
   isBingCrawlerUA,
+  isCrawlerSeoPageUA,
   isDuckDuckCrawlerUA,
   isGoogleCrawlerUA,
   isSearchCrawlerUA,
@@ -26,14 +28,18 @@ import { isSeoCrawlerPath } from "@/lib/seo-crawler-paths"
 import { buildErrorScreenHtml } from "@/lib/error-screen-html"
 import { evaluateOriginRequestGate } from "@/lib/bot-verification/origin-request-gate"
 
-
 function applySearchCrawlerHeaders(request: NextRequest): Headers {
   const requestHeaders = new Headers(request.headers)
   const ua = request.headers.get("user-agent") ?? ""
   const { pathname } = request.nextUrl
 
-
   requestHeaders.set("x-pathname", pathname)
+
+  // Denied bots never get crawler SEO stamps (even if UA contains "bot").
+  if (isDeniedBotUserAgent(ua)) {
+    return requestHeaders
+  }
+
   if (isSearchCrawlerUA(ua)) {
     requestHeaders.set("x-is-search-crawler", "1")
     if (isGoogleCrawlerUA(ua)) requestHeaders.set("x-is-googlebot", "1")
@@ -42,15 +48,17 @@ function applySearchCrawlerHeaders(request: NextRequest): Headers {
     if (isYahooCrawlerUA(ua)) requestHeaders.set("x-is-yahoobot", "1")
     if (isAppleCrawlerUA(ua)) requestHeaders.set("x-is-applebot", "1")
     if (isBaiduCrawlerUA(ua)) requestHeaders.set("x-is-baiduspider", "1")
-    if (isSeoCrawlerPath(pathname)) {
-      requestHeaders.set("x-crawler-seo-page", "1")
-    }
+  }
+
+  // Ranking ∪ social ∪ discovery → CrawlerSeoPage on SEO paths
+  if (isCrawlerSeoPageUA(ua) && isSeoCrawlerPath(pathname)) {
+    requestHeaders.set("x-crawler-seo-page", "1")
   }
 
   return requestHeaders
 }
 
-function nextWithHeaders(requestHeaders: Headers): NextResponse {
+function nextWithHeaders(requestHeaders: Headers, request?: NextRequest): NextResponse {
   const response = NextResponse.next({ request: { headers: requestHeaders } })
   if (requestHeaders.get("x-crawler-seo-page") === "1") {
     response.headers.set("x-crawler-seo-page", "1")
@@ -61,8 +69,8 @@ function nextWithHeaders(requestHeaders: Headers): NextResponse {
       sameSite: "lax",
     })
   }
-  const pathname = requestHeaders.get("x-pathname") ?? ""
-  if (!pathname.startsWith("/api") && !pathname.startsWith("/_next")) {
+  const pathname = request?.nextUrl.pathname ?? requestHeaders.get("x-pathname") ?? ""
+  if (request && !pathname.startsWith("/api") && !pathname.startsWith("/_next")) {
     applyNavProofCookie(response)
   }
   return response
@@ -166,20 +174,20 @@ function handleGeoRegionRedirectIfNeeded(request: NextRequest, requestHeaders: H
   }
 
   const userAgent = request.headers.get("user-agent") || ""
-  if (isTrustedCrawlerUserAgent(userAgent)) {
+  if (isTrustedCrawlerUserAgent(userAgent) || isCrawlerSeoPageUA(userAgent)) {
     return null
   }
 
   const setGeoHeader = (value: "allow" | "block" | "unknown") => {
     const h = new Headers(requestHeaders)
     h.set(GEO_US_ONLY_HEADER, value)
-    return nextWithHeaders(h)
+    return nextWithHeaders(h, request)
   }
 
   if (request.cookies.get("geo_us_block")?.value === "1") {
     const h = new Headers(requestHeaders)
     h.set(GEO_US_ONLY_HEADER, "block")
-    const res = NextResponse.next({ request: { headers: h } })
+    const res = nextWithHeaders(h, request)
     res.cookies.delete("geo_us_block")
     return res
   }
@@ -196,7 +204,6 @@ function handleGeoRegionRedirectIfNeeded(request: NextRequest, requestHeaders: H
 
   return setGeoHeader("allow")
 }
-
 
 function deniedBotErrorResponse(request: NextRequest): NextResponse {
   const host =
@@ -230,16 +237,55 @@ const STRICT_BLOCKED_BOT_PATTERNS = [
   /go-http-client/i,
   /\bjava\b/i,
   /\bphp\b/i,
+  /headlesschrome/i,
+  /puppeteer/i,
+  /playwright/i,
+  /phantomjs/i,
+  /selenium/i,
 ]
 
 const SOFT_BLOCKED_BOT_PATTERNS = [/bot/i, /crawler/i, /spider/i, /scraper/i]
 
-async function handleBotIfNeeded(request: NextRequest): Promise<NextResponse | null> {
+async function handleBotIfNeeded(
+  request: NextRequest,
+  requestHeaders: Headers,
+): Promise<NextResponse | null> {
   const { pathname } = request.nextUrl
   const userAgent = request.headers.get("user-agent") || ""
 
   if (!userAgent) {
-    return null
+    if (
+      pathname === "/robots.txt" ||
+      pathname === "/sitemap.xml" ||
+      isPublicAssetPath(pathname) ||
+      isUngatedSeoPath(pathname) ||
+      isYandexVerificationPath(pathname) ||
+      pathname.startsWith("/api/bot-fingerprint") ||
+      pathname.startsWith("/api/bot-honeypot") ||
+      pathname.startsWith("/_next")
+    ) {
+      return nextWithHeaders(requestHeaders, request)
+    }
+    if (pathname.startsWith("/api")) {
+      return new NextResponse("Forbidden", { status: 403 })
+    }
+    return deniedBotErrorResponse(request)
+  }
+
+  // Competitive SEO + security scanners → SSR ErrorScreen (no JS / no login HTML)
+  // Ungated SEO + brand assets stay reachable for any client (incl. denied bots).
+  if (isDeniedBotUserAgent(userAgent)) {
+    if (
+      isPublicAssetPath(pathname) ||
+      pathname === "/error-icon.png" ||
+      pathname === "/robots.txt" ||
+      pathname === "/sitemap.xml" ||
+      isUngatedSeoPath(pathname) ||
+      isYandexVerificationPath(pathname)
+    ) {
+      return nextWithHeaders(requestHeaders, request)
+    }
+    return deniedBotErrorResponse(request)
   }
 
   const strictMatch = STRICT_BLOCKED_BOT_PATTERNS.some((p) => p.test(userAgent))
@@ -249,23 +295,25 @@ async function handleBotIfNeeded(request: NextRequest): Promise<NextResponse | n
     return null
   }
 
-  if (isTrustedCrawlerUserAgent(userAgent)) {
+  if (isTrustedCrawlerUserAgent(userAgent) || isCrawlerSeoPageUA(userAgent)) {
     return null
   }
 
+  // robots/sitemap/brand assets must stay reachable for any client (not ErrorScreen HTML)
   if (
-    SEO_ALLOWED_PATHS.includes(pathname) ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
     isPublicAssetPath(pathname) ||
+    isUngatedSeoPath(pathname) ||
     isYandexVerificationPath(pathname)
   ) {
-    return NextResponse.next()
+    return nextWithHeaders(requestHeaders, request)
   }
 
   // Soft + strict unknown bots on HTML: cloak — no human login HTML
   if (softMatch || strictMatch) {
     return deniedBotErrorResponse(request)
   }
-
 
   return null
 }
@@ -302,7 +350,6 @@ function handleRiskCookieIfNeeded(request: NextRequest): NextResponse | null {
 
   return deniedBotErrorResponse(request)
 }
-
 
 function originRateLimitResponse(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl
@@ -344,7 +391,6 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     return originResponse
   }
 
-
   const requestHeaders = applySearchCrawlerHeaders(request)
 
   if (!isLocalTestingUnlocked()) {
@@ -353,8 +399,8 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
 
   const { pathname } = request.nextUrl
 
-  if (isLocalTestingUnlocked(request.headers.get("host"))) {
-    return nextWithHeaders(requestHeaders)
+  if (isLocalTestingUnlocked()) {
+    return nextWithHeaders(requestHeaders, request)
   }
 
   const maintenanceRedirect = handleMaintenanceRedirect(request)
@@ -362,11 +408,9 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     return maintenanceRedirect
   }
 
-
   // www/apex: let Vercel Domains own the primary-host redirect (middleware must not fight it)
 
-
-  const botResponse = await handleBotIfNeeded(request)
+  const botResponse = await handleBotIfNeeded(request, requestHeaders)
   if (botResponse) {
     return botResponse
   }
@@ -387,10 +431,10 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     isPublicAssetPath(pathname) ||
     isYandexVerificationPath(pathname)
   ) {
-    return nextWithHeaders(requestHeaders)
+    return nextWithHeaders(requestHeaders, request)
   }
 
-  return nextWithHeaders(requestHeaders)
+  return nextWithHeaders(requestHeaders, request)
 }
 
 export const config = {

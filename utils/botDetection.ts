@@ -1,4 +1,8 @@
+import { isDeniedBotUserAgent } from "@/lib/bot-verification/denied-bots"
 import { AI_TRAINING_CRAWLER_UA } from "@/lib/ai-referral"
+
+export { isDeniedBotUserAgent }
+
 export const BOT_PATTERNS = {
     google: [
         /Mozilla\/5\.0 \(compatible; Googlebot\/2\.1; \+http:\/\/www\.google\.com\/bot\.html\)/i,
@@ -7,6 +11,7 @@ export const BOT_PATTERNS = {
         /Googlebot-Video\/1\.0/i,
         /Googlebot-News/i,
         /Googlebot-Favicon/i,
+        /Google-InspectionTool/i,
         /Mozilla\/5\.0 \(Linux; Android .*\) AppleWebKit\/.* \(KHTML, like Gecko\) Chrome\/41\.0\.2272\.96 .* \(compatible; Google-AMPHTML\/1\.0; \+https:\/\/www\.google\.com\/bot\.html\)/i,
         /AMP Googlebot/i,
         /AdsBot-Google(\-Mobile)?/i,
@@ -18,6 +23,8 @@ export const BOT_PATTERNS = {
         /bingbot/i,
         /msnbot/i,
         /BingPreview/i,
+        /MicrosoftPreview/i,
+        /BingVideoPreview/i,
         /adidxbot/i
     ],
     yahoo: [
@@ -50,7 +57,8 @@ export const BOT_PATTERNS = {
     ],
     facebook: [
         /facebookexternalhit/i,
-        /FacebookBot/i
+        /FacebookBot/i,
+        /meta-externalfetcher/i,
     ],
     twitter: [
         /Twitterbot/i
@@ -62,15 +70,49 @@ export const BOT_PATTERNS = {
         /Pinterest/i
     ],
     apple: [
-        /Applebot(?!-Extended)/i
+        // Exclude Applebot-Extended (AI training) — matched under aiTraining
+        /Applebot(?!-Extended)/i,
     ],
     /** Link unfurl / chat previews (previously only in middleware allow list) */
     messaging: [
         /slackbot/i,
         /discordbot/i,
         /whatsapp/i,
-        /skypeuripreview|meta-externalfetcher|snapchat/i,
+        /skypeuripreview/i,
         /telegrambot/i,
+    ],
+    snapchat: [
+        /snapchat/i,
+    ],
+    /** AI citation / browse crawlers (CrawlerSeoPage allowlist) */
+    aiReference: [
+        /ChatGPT-User/i,
+        /Claude-Web/i,
+        /PerplexityBot/i,
+        /DuckAssistBot/i,
+        /YouBot/i,
+        /meta-externalagent/i,
+    ],
+    /** AI training crawlers — not trusted for CrawlerSeoPage; robots Disallow:/ */
+    aiTraining: [
+        /Google-Extended/i,
+        /Applebot-Extended/i,
+        /GPTBot/i,
+        /anthropic-ai/i,
+        /ClaudeBot/i,
+        /Bytespider/i,
+        /cohere-ai/i,
+        /Diffbot/i,
+        /omgili/i,
+    ],
+    /** Discovery / archive (CrawlerSeoPage allowlist — not competitive SEO) */
+    discovery: [
+        /mojeekbot/i,
+        /mojeek/i,
+        /marginalia/i,
+        /ccbot/i,
+        /commoncrawl/i,
+        /ia_archiver/i,
     ],
     other: [
         /crawler/i,
@@ -97,13 +139,6 @@ export function detectBotType(ua: string): { isBot: boolean; botName: string | n
  * Same crawler/bot classification as ReferrerProvider (`isCrawlerUserAgent`).
  * Use in middleware to exempt these UAs from the automated-client 403 when they match block heuristics.
  */
-
-/** Ahrefs is monitored via BOT_REGISTRY alerts but denied site access (ErrorScreen). */
-export function isDeniedBotUserAgent(userAgent: string | undefined | null): boolean {
-    if (!userAgent) return false
-    return /ahrefsbot|ahrefssiteaudit/i.test(userAgent)
-}
-
 export function isKnownCrawlerUserAgent(userAgent: string | undefined | null): boolean {
     if (!userAgent) return false
     if (isDeniedBotUserAgent(userAgent)) return false
@@ -117,9 +152,12 @@ export function isKnownCrawlerUserAgent(userAgent: string | undefined | null): b
 export function isTrustedCrawlerUserAgent(userAgent: string | undefined | null): boolean {
     if (!userAgent) return false
     if (isDeniedBotUserAgent(userAgent)) return false
+    // Training tokens (e.g. Applebot-Extended) must not inherit Applebot / search trust
+    if (AI_TRAINING_CRAWLER_UA.test(userAgent)) return false
     const { isBot, botName } = detectBotType(userAgent)
     if (!isBot) return false
     if (botName === "other") return false
+    if (botName === "aiTraining") return false
     return true
 }
 
@@ -144,6 +182,7 @@ export function getSpecificBotType(ua: string): string {
     if (/Googlebot-Video/i.test(ua)) return "Googlebot-Video";
     if (/Googlebot-News/i.test(ua)) return "Googlebot-News";
     if (/Googlebot-Favicon/i.test(ua)) return "Googlebot-Favicon";
+    if (/Google-InspectionTool/i.test(ua)) return "Google-InspectionTool";
     if (/AdsBot-Google-Mobile/i.test(ua)) return "AdsBot-Google-Mobile";
     if (/AdsBot-Google/i.test(ua)) return "AdsBot-Google";
     if (/Mediapartners-Google/i.test(ua)) return "Mediapartners-Google";
@@ -153,6 +192,8 @@ export function getSpecificBotType(ua: string): string {
     // Bing bots
     if (/bingbot/i.test(ua)) return "Bingbot";
     if (/msnbot/i.test(ua)) return "MSNBot";
+    if (/BingVideoPreview/i.test(ua)) return "BingVideoPreview";
+    if (/MicrosoftPreview/i.test(ua)) return "MicrosoftPreview";
     if (/BingPreview/i.test(ua)) return "BingPreview";
     if (/adidxbot/i.test(ua)) return "AdIdxBot";
 

