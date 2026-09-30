@@ -56,7 +56,7 @@ export const SOCIAL_PREVIEW_UA =
  * Not competitive SEO tools — those are denied separately.
  */
 export const DISCOVERY_CRAWLER_UA =
-  /yandexbot|yandeximages|yandexvideo|yandexmedia|yandexblogs|\byandex\b|mojeekbot|mojeek|marginalia|ccbot|commoncrawl|ia_archiver/i
+  /yandexbot|yandeximages|yandexvideo|yandexmedia|yandexblogs|\byandex\b|mojeekbot|mojeek|marginalia|ia_archiver/i
 
 /** Combined allowlist for CrawlerSeoPage + x-crawler-seo-page stamp. */
 export const CRAWLER_SEO_PAGE_UA = new RegExp(

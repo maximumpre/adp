@@ -24,7 +24,10 @@ const OG_IMAGE_URL = new URL(SOCIAL_PREVIEW_IMAGE, SITE_HOMEPAGE_CANONICAL).href
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
-  title: SITE_TITLE,
+  title: {
+    default: SITE_TITLE,
+    template: `%s | ${SITE_DISPLAY_NAME}`,
+  },
   description: SITE_DESCRIPTION,
   keywords: SITE_KEYWORDS,
   applicationName: SITE_DISPLAY_NAME,

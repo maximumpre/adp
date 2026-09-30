@@ -4,7 +4,11 @@ import { Suspense, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AdpOtpShell } from "@/components/adp-otp-shell"
 import { LOGIN_SESSION } from "@/lib/login-flow"
-import { MSG_UNABLE_VERIFY_TIME, OTP_CODE_ERROR_TEXT } from "@/lib/approval-messages"
+import {
+  MSG_UNABLE_REACH_VERIFICATION,
+  MSG_UNABLE_VERIFY_TIME,
+  OTP_CODE_ERROR_TEXT,
+} from "@/lib/approval-messages"
 import { usePendingApproval } from "@/hooks/use-pending-approval"
 import {
   getStoredLoginUserId,
@@ -127,7 +131,7 @@ function VerifyContent() {
     } catch (verifyError) {
       console.error("Failed to submit OTP for approval:", verifyError)
       setIsLoading(false)
-      setError("Unable to reach verification. Please try again.")
+      setError(MSG_UNABLE_REACH_VERIFICATION)
     }
   }
 

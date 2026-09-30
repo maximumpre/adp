@@ -6,8 +6,8 @@ import {
   ogImageAbsoluteUrl,
 } from "@/lib/site-url"
 
-// SEO_SITE_NAMES.md: alternateName carries brand/search aliases only —
-// never domain or hostname tokens (anti-degradation rule).
+// SEO_SITE_NAMES.md: brand/search aliases first — the bare lowercase host
+// goes LAST as Google's documented fallback when it cannot map the brand.
 const SCHEMA_ALTERNATE_NAMES = [
   `${SITE_DISPLAY_NAME} login`,
   "MyADP",
@@ -29,7 +29,7 @@ export function SeoJsonLd() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE_DISPLAY_NAME,
-    alternateName: [...SCHEMA_ALTERNATE_NAMES],
+    alternateName: [...SCHEMA_ALTERNATE_NAMES, new URL(SITE_ORIGIN).hostname.toLowerCase()],
     description: SITE_DESCRIPTION,
     url: SITE_HOMEPAGE_CANONICAL,
     publisher: {

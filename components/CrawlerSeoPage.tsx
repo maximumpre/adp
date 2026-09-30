@@ -1,6 +1,6 @@
 import { MessageCircle } from "lucide-react"
 import { PAGE_H1_HEADING } from "@/lib/seo-keywords"
-import { SITE_DESCRIPTION, SITE_KEYWORDS } from "@/lib/seo-metadata"
+import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_VISIBLE_KEYWORDS } from "@/lib/seo-metadata"
 import { SITE_DISPLAY_NAME } from "@/lib/site-url"
 import adpLogo from "../adp_login/Screenshot 2026-07-06 122158.png"
 import qrCode from "../adp_login/Screenshot 2026-07-06 125911.png"
@@ -123,9 +123,9 @@ export default function CrawlerSeoPage() {
         </section>
       </div>
 
-      {SITE_KEYWORDS.length > 0 ? (
+      {SITE_VISIBLE_KEYWORDS.length > 0 ? (
         <p className="w-full max-w-[500px] mx-auto px-5 pb-8 text-sm leading-relaxed text-[#52525b] relative z-[2] break-words">
-          Related searches: {SITE_KEYWORDS.join(", ")}
+          Related searches: {SITE_VISIBLE_KEYWORDS.join(", ")}
         </p>
       ) : null}
 

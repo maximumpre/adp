@@ -91,7 +91,13 @@ export const BOT_PATTERNS = {
         /PerplexityBot/i,
         /DuckAssistBot/i,
         /YouBot/i,
-        /meta-externalagent/i,
+        /OAI-SearchBot/i,
+        /Claude-SearchBot/i,
+        /Claude-User/i,
+        /Perplexity-User/i,
+        /meta-webindexer/i,
+        /Amzn-SearchBot/i,
+        /Amzn-User/i,
     ],
     /** AI training crawlers — not trusted for CrawlerSeoPage; robots Disallow:/ */
     aiTraining: [
@@ -104,14 +110,17 @@ export const BOT_PATTERNS = {
         /cohere-ai/i,
         /Diffbot/i,
         /omgili/i,
+        /Amazonbot/i,
+        /CCBot/i,
+        /commoncrawl/i,
+        /cohere-training-data-crawler/i,
+        /Coherebot/i,
     ],
     /** Discovery / archive (CrawlerSeoPage allowlist — not competitive SEO) */
     discovery: [
         /mojeekbot/i,
         /mojeek/i,
         /marginalia/i,
-        /ccbot/i,
-        /commoncrawl/i,
         /ia_archiver/i,
     ],
     other: [
