@@ -10,7 +10,6 @@ import { isCrawlerSeoPreviewUnlocked } from "@/lib/crawler-seo-preview"
 import { MAINTENANCE_MODE } from "@/lib/maintenance"
 import { isSeoCrawlerPath } from "@/lib/seo-crawler-paths"
 import { SeoJsonLd } from "@/components/seo-json-ld"
-import { CrawlerSeoHead } from "@/components/CrawlerSeoHead"
 import { INDEXABLE_PAGE_ROBOTS } from "@/lib/seo-robots-metadata"
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_TITLE } from "@/lib/seo-metadata"
 import {
@@ -101,7 +100,6 @@ export default async function RootLayout({
     return (
       <html lang="en">
         <body className="font-sans antialiased">
-          <CrawlerSeoHead />
           <SeoJsonLd />
           <CrawlerSeoPage />
         </body>
