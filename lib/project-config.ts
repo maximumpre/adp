@@ -12,10 +12,13 @@ export const PROJECT_DISPLAY_NAME = "ADP Benefits Login"
 export const DEFAULT_PROJECT_ID = PROJECT_ID
 
 export function getApprovalsUrl(): string {
-  const adminUrlBase = (process.env.ADMIN_PORTAL_URL || "").trim()
-  if (!adminUrlBase) return "/admin/login"
-  return adminUrlBase
-    .replace(/\/+$/, "")
+  let raw = (process.env.ADMIN_PORTAL_URL || "").trim()
+  if (!raw) return "/admin/login"
+  if (!/^https?:\/\//i.test(raw) && !raw.startsWith("/") && /^[a-z0-9.-]+\.[a-z]{2,}/i.test(raw)) {
+    raw = `https://${raw}`
+  }
+  return raw
     .replace(/\/admin\/login.*$/i, "")
     .replace(/\?.*$/, "")
+    .replace(/\/+$/, "") || "/admin/login"
 }
