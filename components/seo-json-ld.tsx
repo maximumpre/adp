@@ -10,6 +10,8 @@ import {
 // goes LAST as Google's documented fallback when it cannot map the brand.
 const SCHEMA_ALTERNATE_NAMES = [
   `${SITE_DISPLAY_NAME} login`,
+  "ADP Account Login",
+  "ADP Portal",
   "MyADP",
   "MyADP login",
   "Login & Support | MyADP",

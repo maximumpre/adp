@@ -2,7 +2,12 @@
 
 ## Changelog
 
-### 2026-09-30 — Hardened `scripts/audit-crawler-seo.mjs` (recurrence guard for the SEO rollout)
+### 2026-10-04 — Search engine site names alignment and CrawlerSeoHead delivery
+- **Brand Name Normalization**: Updated `SITE_DISPLAY_NAME` in `lib/site-url.ts` from `"ADP Account Login"` to `"ADP"`, complying with Google Search Central guidelines against generic action suffixes ("Account Login") which trigger search engines to fall back to the domain (`adpauth.com`).
+- **Crawler Head Parity (`CrawlerSeoHead`)**: Added `components/CrawlerSeoHead.tsx` rendered in `app/layout.tsx` on the crawler branch (`if (isCrawlerSeo)`), ensuring Googlebot and Bingbot receive `<title>`, `<meta property="og:site_name">`, canonical, and favicon links hoisted via React 19.
+- **Alternate Names Expansion**: Added `"ADP Account Login"` and `"ADP Portal"` to `SCHEMA_ALTERNATE_NAMES` in `components/seo-json-ld.tsx` with bare lowercase domain fallback preserved.
+- **Verification**: `scripts/audit-crawler-seo.mjs` exits 0; `npm run build` completed successfully.
+
 
 - The kit audit was extended after the cross-project rollout exposed four blind spots, and the new copy was re-synced here byte-for-byte (md5 `9b50eb51ddf0aa4ca0691840a406340d`):
   - **`alternateName` is now actually checked here.** The audit only read `components/structured-data.tsx`, so projects shipping `components/seo-json-ld.tsx` were silently skipped. Both filenames are read now, and the bare lowercase host must be **present as the final entry** (Google site-names fallback #2) — not merely un-banned.

@@ -1,5 +1,5 @@
 /** Display name for notifications and metadata. */
-export const SITE_DISPLAY_NAME = "ADP Account Login" as const
+export const SITE_DISPLAY_NAME = "ADP" as const
 
 export const SITE_ORIGIN = "https://www.adpauth.com" as const
 
