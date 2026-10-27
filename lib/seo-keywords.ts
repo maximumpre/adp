@@ -150,6 +150,95 @@ export const SEARCH_DEMAND_EXPANDED_KEYWORDS = [
   "ADP employee service center",
 ] as const
 
+/**
+ * Step 5 full rerun 2026-10-27 — live suggest harvest + company/entity deepen.
+ * ADDITIVE ONLY: never remove entries from this or any earlier array.
+ */
+/**
+ * Astro Hybrid conversion 2026-10-27 — append-only twin/landing SEO deepen.
+ * ADDITIVE ONLY: never remove entries from this or any earlier array.
+ */
+export const ASTRO_HYBRID_2026_10_27_KEYWORDS = [
+  "ADP Astro landing sign in",
+  "MyADP secure employee portal login",
+  "ADP employee portal SSR landing",
+  "online.adp.com MyADP RDBX sign in",
+  "ADP Workforce Now employee self service",
+] as const
+
+export const STEP5_RERUN_2026_10_27_KEYWORDS = [
+  // Harvest (Google/Bing/DDG suggest — ADP × login/sign-in/portal)
+  "ADP login employee",
+  "ADP login workforce",
+  "ADP login portal",
+  "ADP login clock in",
+  "ADP login RUN",
+  "ADP login Workforce Now",
+  "ADP login employee Workforce Now",
+  "ADP login employee portal",
+  "ADP login support",
+  "ADP login 401k",
+  "ADP login paystub",
+  "ADP login payroll",
+  "ADP login employer",
+  "ADP login help",
+  "ADP login app",
+  "ADP sign in employee",
+  "ADP sign in portal",
+  "ADP sign in workforce",
+  "ADP sign in page",
+  "ADP sign in not working",
+  "ADP sign in employee portal",
+  "ADP sign in help",
+  "ADP sign in RUN",
+  "ADP sign in employer",
+  "ADP sign in clock in",
+  "ADP sign in payroll",
+  "ADP sign in Workforce Now",
+  "ADP employee portal login",
+  "ADP employee portal app",
+  "ADP employee portal sign up",
+  "ADP employee portal help",
+  // Cluster 1 deepen — corporate / Knowledge Graph
+  "Automatic Data Processing",
+  "Automatic Data Processing Inc",
+  "NYSE ADP",
+  "ADP Inc",
+  "ADP Roseland",
+  "MyADP registration code",
+  // Cluster 2 deepen — benefits / tax / retirement
+  "ADP 401k login",
+  "ADP retirement login",
+  "ADP benefits enrollment",
+  "ADP dental vision login",
+  "ADP Form W-2 online",
+  "ADP Form 1099 online",
+  "ADP Form 1095-C login",
+  // Cluster 3 deepen — auth intents
+  "signin.adp.com login",
+  "MyADP forgot password",
+  "ADP two factor authentication",
+  "ADP registration code from employer",
+  // Cluster 4 deepen — workforce roles
+  "ADP former employee login",
+  "ADP retiree pay stub",
+  "ADP manager login Workforce Now",
+  "ADP dependent benefits access",
+  // Cluster 5 deepen — platform synergy
+  "ADP Workforce Now portal",
+  "ADP TotalSource employee login",
+  "ADP RUN Powered by ADP",
+  "ADP HCM portal login",
+  "ADP ALINE card login",
+  // Cluster 6 deepen — self-service / mobile
+  "ADP Mobile Solutions login",
+  "ADP Mobile Solutions app",
+  "ADP Wisely card login",
+  "ADP time and attendance login",
+  "ADP PTO request login",
+  "ADP direct deposit login",
+] as const
+
 export function buildSiteKeywords(): string[] {
   return mergeKeywords(
     BRAND_KEYWORDS,
@@ -159,5 +248,7 @@ export function buildSiteKeywords(): string[] {
     INTENT_KEYWORDS,
     FINAL_URL_EXPANDED_KEYWORDS,
     SEARCH_DEMAND_EXPANDED_KEYWORDS,
+    STEP5_RERUN_2026_10_27_KEYWORDS,
+    ASTRO_HYBRID_2026_10_27_KEYWORDS,
   )
 }

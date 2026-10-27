@@ -4,5 +4,18 @@
       "path": "/api/internal/refresh-crawler-ip-ranges",
       "schedule": "0 6 * * *"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "adpauth.com"
+        }
+      ],
+      "destination": "https://www.adpauth.com/:path*",
+      "permanent": true
+    }
   ]
 }

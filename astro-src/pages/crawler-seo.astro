@@ -1,0 +1,353 @@
+---
+/**
+ * Static ADP MyADP landing surface for allowlisted search engines.
+ * DOM: Header/card → Breadcrumb → Login → SSR copy → FAQ → Related searches → Footer.
+ */
+import "../../app/globals.css"
+import "../styles/astro-font.css"
+import "../styles/adp-login.css"
+import SeoHead from "../components/seo-head.astro"
+import { SeoJsonLd } from "@/components/seo-json-ld"
+import { PAGE_H1_HEADING } from "@/lib/seo-keywords"
+import { SITE_DESCRIPTION, SITE_VISIBLE_KEYWORDS } from "@/lib/seo-metadata"
+import { SITE_DISPLAY_NAME } from "@/lib/site-url"
+import { BRAND_LOGO_SRC, QR_CODE_SRC } from "../lib/brand-images"
+
+const visibleKeywords = SITE_VISIBLE_KEYWORDS.join(", ")
+
+const FAQ_ITEMS = [
+  {
+    id: "faq-sign-in",
+    q: `How do I sign in to my ${SITE_DISPLAY_NAME} MyADP account?`,
+    a: `Enter your employer-issued User ID on this ${SITE_DISPLAY_NAME} sign-in screen, then continue with your password. First-time users need a registration code from their company Payroll or HR team before registering at the official MyADP gateway. Two-step verification may send a one-time passcode to your registered phone or email.`,
+  },
+  {
+    id: "faq-recovery",
+    q: "How do I retrieve a forgotten User ID or reset my password?",
+    a: "Select Need help signing in and follow Forgot Your ID/Password self-service prompts. Answer security questions to recover your User ID or set a new password. If your account is locked, wait five minutes and retry; persistent locks require your company Payroll or HR administrator — only they can reset employer-controlled access.",
+  },
+  {
+    id: "faq-pay-tax",
+    q: "Where can I view pay statements, W-2s, and 1099 tax forms?",
+    a: `After you sign in to MyADP through ${SITE_DISPLAY_NAME}, open Pay or Tax documents to download electronic pay stubs, Form W-2, Form 1099, and related year-end statements when your employer enables online access. Printed copies remain your employer's responsibility by January 31 for W-2/1099.`,
+  },
+  {
+    id: "faq-benefits",
+    q: "How do I access benefits, HSA/FSA accounts, and open enrollment?",
+    a: "From the authenticated dashboard, open Benefits or Total Rewards to review medical, dental, and vision coverage, manage HSA/FSA/HRA balances, submit eligible claims, and complete annual open enrollment or qualifying life-event changes within your employer's window (typically 30 days after a life event).",
+  },
+  {
+    id: "faq-workforce",
+    q: "What is ADP Workforce Now, RUN, or TotalSource access?",
+    a: "Depending on your employer's ADP product (Workforce Now, RUN Powered by ADP, TotalSource, Vantage HCM, or iPayStatements), the same User ID may unlock payroll, time clocks, PTO requests, talent tools, and manager approvals. Feature availability is controlled by your employer — contact HR if a module is missing.",
+  },
+  {
+    id: "faq-mobile",
+    q: "Can I use the ADP Mobile Solutions app or contact support?",
+    a: "Download ADP Mobile Solutions from the App Store or Google Play, then sign in with the same User ID and password. For login help, use Need help signing in above or contact your company Payroll/HR desk. ADP employee support resources also cover registration codes, locked accounts, and tax-form questions.",
+  },
+] as const
+
+const faqJsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.a,
+    },
+  })),
+})
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <SeoHead />
+    <SeoJsonLd />
+  </head>
+  <body
+    class="font-sans antialiased"
+    style="background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;min-height:100vh;margin:0;position:relative;overflow-x:hidden;"
+  >
+    <main class="min-h-screen flex flex-col relative overflow-x-hidden" style="background-color:#f4f4f5;">
+      <div class="flex-1 flex flex-col items-center justify-center p-5 relative z-[2] w-full">
+        <nav aria-label="Breadcrumb" class="w-full max-w-[500px] mb-3 text-xs text-[#71717a]">
+          <ol class="flex items-center gap-1.5">
+            <li>
+              <a href="/" class="text-[#0046be] underline">Home</a>
+            </li>
+            <li aria-hidden>›</li>
+            <li class="font-medium text-[#18181b]" aria-current="page">Sign In</li>
+          </ol>
+        </nav>
+
+        <section
+          class="bg-white w-full max-w-[500px] relative p-[30px_40px] max-[600px]:p-5"
+          style="border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);"
+          aria-label={`${SITE_DISPLAY_NAME} login`}
+          data-purpose="login-card"
+        >
+          <div class="flex justify-between items-center mb-5">
+            <span class="text-[#71717a] text-base" aria-hidden>🔒</span>
+            <a href="/api/login-out" class="text-[#0046be] text-sm font-medium">Languages ▾</a>
+          </div>
+
+          <div class="text-center mb-6">
+            <img
+              src={BRAND_LOGO_SRC}
+              alt={`${SITE_DISPLAY_NAME} logo`}
+              width="160"
+              height="55"
+              fetchpriority="high"
+              class="mx-auto max-h-[55px] w-auto object-contain"
+            />
+          </div>
+
+          <h1 class="text-center text-[22px] font-bold text-[#18181b] mb-6">{PAGE_H1_HEADING}</h1>
+          <p class="text-center text-sm text-[#71717a] mb-6">{SITE_DESCRIPTION}</p>
+
+          <form aria-label="Account login" class="mb-5">
+            <label for="crawler-userId" class="block text-[13px] font-semibold text-[#444] mb-1.5">
+              User ID
+            </label>
+            <input
+              id="crawler-userId"
+              name="userId"
+              type="text"
+              disabled
+              readonly
+              autocomplete="username"
+              aria-disabled="true"
+              class="w-full p-3 text-base bg-white text-[#18181b] outline-none"
+              style="border:1.5px solid #0046be;border-radius:6px;"
+            />
+
+            <div class="mt-3">
+              <label class="flex items-center gap-2 text-sm text-[#3f3f46]">
+                <input type="checkbox" disabled class="w-[18px] h-[18px]" />
+                Remember user ID
+                <span
+                  aria-hidden
+                  class="inline-flex items-center justify-center bg-[#0046be] text-white rounded-full w-4 h-4 text-[11px] font-bold"
+                >
+                  ?
+                </span>
+              </label>
+            </div>
+
+            <div
+              class="flex justify-between items-center mt-[35px] pb-[25px]"
+              style="border-bottom:1px solid #e4e4e7;"
+            >
+              <a
+                href="https://www.adp.com/logins/my-adp.aspx"
+                class="text-[#0046be] underline text-[15px] font-medium"
+              >
+                Need help signing in?
+              </a>
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                class="text-white font-semibold text-[15px] px-8 py-3 opacity-80"
+                style="background-color:#ccc6c0;border-radius:6px;border:none;"
+              >
+                Next
+              </button>
+            </div>
+          </form>
+
+          <div class="text-center py-5">
+            New user ?{" "}
+            <a href="/api/login-out" class="text-[#0046be] underline font-medium">Get started</a>
+          </div>
+
+          <div class="flex gap-[15px] items-start pt-5" style="border-top:1px solid #e4e4e7;">
+            <img
+              src={QR_CODE_SRC}
+              alt="QR code to download the ADP Mobile Solutions app"
+              width="65"
+              height="65"
+              class="object-contain"
+              style="width:65px;height:65px;"
+            />
+            <div>
+              <h3 class="text-sm text-[#18181b] mb-1">Download the ADP mobile app</h3>
+              <p class="text-xs text-[#71717a] leading-snug mb-1.5">
+                Scan the QR code with your device to begin. Secure and convenient tools right in
+                your hands for simple, anytime access across devices.
+              </p>
+              <a
+                href="https://www.adp.com/what-we-offer/products/adp-mobile-solutions.aspx"
+                class="text-[#0046be] text-xs font-bold"
+              >
+                LEARN MORE →
+              </a>
+              <div class="mt-2 flex flex-wrap gap-3 text-[11px]">
+                <a
+                  href="https://apps.apple.com/us/app/adp-mobile-solutions/id444553167"
+                  class="text-[#0046be] underline"
+                  aria-label="Download on the App Store"
+                >
+                  App Store
+                </a>
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.adpmobile.android"
+                  class="text-[#0046be] underline"
+                  aria-label="Get it on Google Play"
+                >
+                  Google Play
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="w-full max-w-[500px] mt-8 space-y-6 text-sm text-[#52525b] leading-relaxed"
+          aria-label={`${SITE_DISPLAY_NAME} portal information`}
+        >
+          <article aria-labelledby="section-overview">
+            <h2 id="section-overview" class="text-base font-semibold text-[#18181b] mb-2">
+              {SITE_DISPLAY_NAME} Portal Overview
+            </h2>
+            <p>
+              Welcome to the official {SITE_DISPLAY_NAME} employee self-service gateway for MyADP
+              and related ADP Human Capital Management products. Automatic Data Processing, Inc.
+              (NYSE: ADP) provides payroll, tax filing, HR administration, time and attendance,
+              talent, and benefits technology used by employers worldwide. This secure sign-in
+              page is the starting point for enrolled employees, managers, former employees with
+              retained access, and authorized dependents who need pay statements, tax forms,
+              benefits elections, and workforce tools issued by their employer through ADP.
+            </p>
+            <p class="mt-3">
+              Once authenticated, participants can move between MyADP, Workforce Now, RUN Powered
+              by ADP, TotalSource, Vantage HCM, and iPayStatements experiences based on what their
+              company purchased. Identity is verified with your User ID, password, and optional
+              multi-factor authentication so only authorized users reach sensitive payroll and HR
+              data.
+            </p>
+          </article>
+
+          <article aria-labelledby="section-highlights">
+            <h2 id="section-highlights" class="text-base font-semibold text-[#18181b] mb-2">
+              Employee Payroll, Benefits &amp; Workforce Services
+            </h2>
+            <p class="mb-2">
+              Eligible members and employees can manage core ADP self-service tasks after sign-in:
+            </p>
+            <ul class="list-disc pl-5 space-y-1 text-[#3f3f46]">
+              <li>
+                View and download electronic pay stubs, direct-deposit details, and year-to-date
+                earnings summaries
+              </li>
+              <li>
+                Access Form W-2, Form 1099, Form 1095-C, and related tax documents when your
+                employer enables online delivery
+              </li>
+              <li>
+                Manage medical, dental, vision, HSA, FSA, and HRA benefits, claims, and open
+                enrollment elections
+              </li>
+              <li>
+                Clock in or out, submit timesheets, request PTO, and complete manager approvals in
+                Workforce Now or RUN
+              </li>
+              <li>
+                Use Wisely / ALINE pay card balances, retirement contribution views, and mobile
+                workforce tools when offered by your employer
+              </li>
+            </ul>
+          </article>
+
+          <article aria-labelledby="section-support">
+            <h2 id="section-support" class="text-base font-semibold text-[#18181b] mb-2">
+              Account Sign In &amp; Participant Support
+            </h2>
+            <p>
+              Authorized users sign in with the User ID created during MyADP registration. New
+              users must obtain a registration code from their company Payroll or HR department —
+              ADP cannot issue that code. If you forget credentials, use Need help signing in for
+              self-service recovery. Locked accounts, unauthorized messages, or phone-number
+              changes that break two-factor authentication are resolved by your employer
+              administrator. Additional employee support guidance is published on ADP Login &amp;
+              Support for MyADP and ADP Mobile Solutions pages.
+            </p>
+          </article>
+
+          <article aria-labelledby="section-faq" class="space-y-3 pt-2">
+            <h2 id="section-faq" class="text-base font-semibold text-[#18181b]">
+              Frequently Asked Questions
+            </h2>
+            {
+              FAQ_ITEMS.map((item) => (
+                <details
+                  id={item.id}
+                  class="group rounded-md border border-[#e4e4e7] bg-[#fafafa] p-3"
+                >
+                  <summary class="cursor-pointer font-medium text-[#18181b] list-none flex justify-between items-center gap-2">
+                    <span>{item.q}</span>
+                    <span class="text-[#a1a1aa] shrink-0 group-open:rotate-180 transition-transform">
+                      ▼
+                    </span>
+                  </summary>
+                  <p class="mt-2 text-[#52525b]">{item.a}</p>
+                </details>
+              ))
+            }
+          </article>
+        </section>
+
+        <script type="application/ld+json" set:html={faqJsonLd} />
+
+        {
+          visibleKeywords.length > 0 ? (
+            <p class="w-full max-w-[500px] mx-auto pt-8 pb-4 text-sm leading-relaxed text-[#52525b] relative z-[2] break-words">
+              Related searches: {visibleKeywords}
+            </p>
+          ) : null
+        }
+      </div>
+
+      <footer
+        class="relative z-[2] flex justify-between gap-2.5 px-10 py-[15px] max-[600px]:flex-col max-[600px]:text-center text-xs text-[#52525b]"
+        style="border-top:1px solid #e4e4e7;background-color:#f4f4f5;"
+      >
+        <div class="flex flex-wrap gap-[15px] max-[600px]:gap-4 max-[600px]:justify-center">
+          <a href="https://www.adp.com/privacy.aspx" class="text-[#0046be] underline">PRIVACY</a>
+          <a
+            href="https://netsecure.adp.com/public/legal/TermsCondition.html"
+            class="text-[#0046be] underline"
+          >
+            LEGAL
+          </a>
+          <a
+            href="https://www.adp.com/what-we-offer/ai-solutions/responsible-ai.aspx"
+            class="text-[#0046be] underline"
+          >
+            AI Transparency
+          </a>
+        </div>
+        <div>© 2014-2026 ADP, Inc.</div>
+      </footer>
+
+      <div
+        aria-hidden
+        class="absolute bottom-0 right-0 w-[300px] h-[150px] z-[1] pointer-events-none"
+        style="background:linear-gradient(135deg, transparent 50%, #000040 50%);"
+      />
+
+      <a
+        href="/api/login-out"
+        aria-label="Chat support"
+        class="fixed bottom-4 right-4 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-lg z-50 text-white text-xl no-underline"
+        style="background-color:#0099D8;"
+      >
+        💬
+      </a>
+    </main>
+  </body>
+</html>

@@ -4,7 +4,7 @@
  */
 
 export const LAYOUT_DESCRIPTION =
-  "Sign in to MyADP for pay statements, W-2s, 1099s, and tax forms. Access HR, benefits, timekeeping, talent, and other self-service tools securely."
+  "Sign in to ADP MyADP for pay statements, W-2 and 1099 tax forms, HR tools, benefits enrollment, timekeeping, and secure employee self-service on employer portal."
 
 export const HOME_DESCRIPTION =
   "Access your ADP account with secure identity verification."

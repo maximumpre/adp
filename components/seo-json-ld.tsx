@@ -18,10 +18,11 @@ const SCHEMA_ALTERNATE_NAMES = [
   "Sign in to ADP",
   "ADP benefits login",
   "ADP employee login",
+  "Automatic Data Processing",
 ] as const
 
 /**
- * JSON-LD structured data for SEO (WebSite + Organization).
+ * JSON-LD structured data for SEO (WebSite + Organization + BreadcrumbList).
  * Rendered in root layout for search engines.
  */
 export function SeoJsonLd() {
@@ -45,7 +46,7 @@ export function SeoJsonLd() {
       "@type": "LoginAction",
       target: {
         "@type": "EntryPoint",
-        url: SITE_HOMEPAGE_CANONICAL,
+        urlTemplate: SITE_HOMEPAGE_CANONICAL,
       },
       name: SITE_TITLE,
     },
@@ -55,9 +56,21 @@ export function SeoJsonLd() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: SITE_DISPLAY_NAME,
+    legalName: "Automatic Data Processing, Inc.",
+    alternateName: ["ADP, Inc.", "Automatic Data Processing"],
     url: SITE_ORIGIN,
     logo: logoUrl,
     description: SITE_DESCRIPTION,
+    tickerSymbol: "ADP",
+    sameAs: [
+      "https://en.wikipedia.org/wiki/ADP_(company)",
+      "https://www.wikidata.org/wiki/Q336151",
+      "https://www.adp.com/",
+      "https://www.linkedin.com/company/adp",
+      "https://www.facebook.com/automaticdataprocessing",
+      "https://twitter.com/ADP",
+      "https://www.nyse.com/quote/XNYS:ADP",
+    ],
   }
 
   const breadcrumbSchema = {
@@ -67,7 +80,13 @@ export function SeoJsonLd() {
       {
         "@type": "ListItem",
         position: 1,
-        name: SITE_DISPLAY_NAME,
+        name: "Home",
+        item: SITE_HOMEPAGE_CANONICAL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Sign In",
         item: SITE_HOMEPAGE_CANONICAL,
       },
     ],

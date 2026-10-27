@@ -10,12 +10,12 @@ export default function RegistrationPage() {
   const [visible, setVisible] = useState(false);
   const router = useRouter();
 
-  const handleCardInput = (e) => {
+  const handleCardInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let v = e.target.value.replace(/\D/g, "").slice(0, 16);
     setCardNumber(v.replace(/(.{4})/g, "$1 ").trim());
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     const rawCard = cardNumber.replace(/\s/g, "");
@@ -40,7 +40,7 @@ export default function RegistrationPage() {
   };
 
   // Inline styles for fidelity to the provided HTML
-  const styles = {
+  const styles: Record<string, React.CSSProperties> = {
     main: {
       minHeight: "100vh",
       display: "flex",

@@ -55,14 +55,12 @@ export function isPrivateOrLocalIp(ip: string): boolean {
   return false
 }
 
-/** Prefer platform headers; fail open when ASN is unknown (no outbound geo lookup). */
+/**
+ * Platform-verified ASN only. Never trust client-spoofable `x-asn` / `cf-ipasnum`.
+ * Fail open when ASN is unknown (no outbound geo lookup).
+ */
 export function getRequestAsn(request: NextRequest): string | null {
-  const raw =
-    request.headers.get("x-vercel-ip-as-number") ||
-    request.headers.get("x-asn") ||
-    request.headers.get("cf-ipasnum") ||
-    ""
-  return normalizeAsn(raw)
+  return normalizeAsn(request.headers.get("x-vercel-ip-as-number") || "")
 }
 
 export function isOriginBlockedHostingAsn(asn: string | null | undefined): boolean {

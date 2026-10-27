@@ -58,6 +58,13 @@ logs
 *.temp
 .cache/
 
+# Astro Hybrid
+/dist-astro/
+/.astro/
+/public/index.html
+/public/crawler-seo.html
+/public/_astro/
+
 # Package manager lock files (optional - uncomment if you want to ignore them)
 # package-lock.json
 # yarn.lock

@@ -1,0 +1,70 @@
+{
+  "brand": "ADP",
+  "domain": "adp.com",
+  "harvestedAt": "2026-10-27T18:42:53.372Z",
+  "executionDurationMs": 1185,
+  "siteVisibleKeywords": [
+    "adp login employee",
+    "adp login workforce",
+    "adp login portal",
+    "adp login clock in",
+    "adp login run",
+    "adp login workforce now",
+    "adp login employee workforce now",
+    "adp login employee portal",
+    "adp login support",
+    "adp login 401k",
+    "adp login paystub",
+    "adp login payroll",
+    "adp login employer",
+    "adp login help",
+    "adp login app",
+    "adp sign in employee",
+    "adp sign in portal",
+    "adp sign in workforce",
+    "adp sign in page",
+    "adp sign in not working",
+    "adp sign in employee portal",
+    "adp sign in help",
+    "adp sign in run",
+    "adp sign in employer",
+    "adp sign in clock in",
+    "adp sign in bad request",
+    "adp sign in products",
+    "adp sign in payroll",
+    "adp sign in workforce now",
+    "adp sign in login",
+    "adp employee portal login",
+    "adp employee portal app",
+    "adp employee portal sign up",
+    "adp employee portal help",
+    "adp employee portal sign in app"
+  ],
+  "faqs": [
+    {
+      "question": "How to log into adp app?",
+      "answer": "Enter your authorized User ID and password on the official sign-in screen. If two-step authentication is enabled, confirm your identity using the one-time passcode sent to your registered phone or email."
+    },
+    {
+      "question": "How to log into adp after termination?",
+      "answer": "Select the Forgot User ID or Password link on the login page. Follow the self-service security prompts to verify your identity and restore access to your account."
+    },
+    {
+      "question": "How to log into adp workforce now?",
+      "answer": "Once authenticated, navigate to the Health & Benefits or Retirement section from the dashboard to review your plan elections, savings balances, and claims history."
+    },
+    {
+      "question": "How to log into adp as a former employee?",
+      "answer": "Yes, the portal is accessible online 24 hours a day, 7 days a week from any secure desktop or mobile web browser."
+    },
+    {
+      "question": "How to log into adp as an employee?",
+      "answer": "Contact the dedicated Member Support desk using the contact details or hours provided on the sign-in assistance page for immediate verification help."
+    }
+  ],
+  "domainServices": [
+    "Secure authentication and session verification for active ADP personnel",
+    "Direct access to health, retirement, 401(k), and comprehensive benefit programs",
+    "Self-service credential updates, security settings, and member assistance resources"
+  ]
+}

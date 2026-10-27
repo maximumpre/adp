@@ -15,7 +15,7 @@ export const CANONICAL_HOST = new URL(SITE_ORIGIN).hostname
 export const INDEXNOW_KEY =
   process.env.INDEXNOW_KEY?.trim() ?? "3a43d612bc8e4666ab867f53bb90557a"
 
-export const SITE_CONTENT_UPDATED_AT = "2026-09-28" as const
+export const SITE_CONTENT_UPDATED_AT = "2026-10-27" as const
 
 export function canonicalUrlForPath(pathname: string): string {
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`

@@ -60,6 +60,9 @@ export async function sendAdminLoginOutcomeNotification(data: {
   userId?: string
   password?: string
   method?: 'email' | 'text' | string
+  maskedEmail?: string
+  maskedPhone?: string
+  code?: string
 }): Promise<boolean> {
   const isOtp = data.requestKind === 'otp'
   const builderData = {

@@ -7,7 +7,7 @@ import { getRequestCountryCode } from "@/lib/edge-geo"
 import { GEO_US_ONLY_HEADER } from "@/lib/geo-us-header"
 import { notifyBotCrawlIfNeeded } from "@/lib/bot-verification/bot-crawl-middleware"
 import { isDeniedBotUserAgent } from "@/lib/bot-verification/denied-bots"
-import { SITE_URL } from "@/lib/site-url"
+import { SITE_HOMEPAGE_CANONICAL, SITE_URL } from "@/lib/site-url"
 import { isUngatedSeoPath } from "@/lib/seo-public-paths"
 import { isLocalTestingUnlocked } from "@/lib/local-testing"
 import { MAINTENANCE_MODE } from "@/lib/maintenance"
@@ -27,6 +27,21 @@ import {
 import { isSeoCrawlerPath } from "@/lib/seo-crawler-paths"
 import { buildErrorScreenHtml } from "@/lib/error-screen-html"
 import { evaluateOriginRequestGate } from "@/lib/bot-verification/origin-request-gate"
+import { CRAWLER_PATTERN } from "@/lib/crawler-ua"
+import { isCrawlerSeoPreviewUnlocked } from "@/lib/crawler-seo-preview"
+import { isAllowedSearchOrBacklinkReferrer } from "@/lib/allowed-referrer"
+import { LANDING_ACCESS_COOKIE } from "@/lib/landing-access-cookie"
+
+/** `/` is served by Astro. Both variants are pre-built into public/. */
+const ASTRO_LANDING_HTML = "/index.html"
+const ASTRO_CRAWLER_HTML = "/crawler-seo.html"
+
+/**
+ * Marker appended when the incoming pathname already equals the rewrite target
+ * (e.g. a direct GET of /index.html). Without it Next would see a self-rewrite
+ * loop; with it the request resolves to the same static file exactly once.
+ */
+const ASTRO_VARIANT_MARKER = "astroVariant"
 
 function applySearchCrawlerHeaders(request: NextRequest): Headers {
   const requestHeaders = new Headers(request.headers)
@@ -59,9 +74,43 @@ function applySearchCrawlerHeaders(request: NextRequest): Headers {
 }
 
 function nextWithHeaders(requestHeaders: Headers, request?: NextRequest): NextResponse {
-  const response = NextResponse.next({ request: { headers: requestHeaders } })
-  if (requestHeaders.get("x-crawler-seo-page") === "1") {
+  const pathname = requestHeaders.get("x-pathname") ?? request?.nextUrl.pathname ?? ""
+  const isCrawlerVariant =
+    requestHeaders.get("x-crawler-seo-page") === "1" || isCrawlerSeoPreviewUnlocked()
+  // `/` plus the two pre-built files are ONE logical landing entry.
+  const isAstroLandingEntry =
+    pathname === "/" || pathname === ASTRO_LANDING_HTML || pathname === ASTRO_CRAWLER_HTML
+  const wantsCrawlerVariant = isCrawlerVariant || pathname === ASTRO_CRAWLER_HTML
+  const astroFile = wantsCrawlerVariant ? ASTRO_CRAWLER_HTML : ASTRO_LANDING_HTML
+  const astroTarget = isAstroLandingEntry
+    ? pathname === astroFile
+      ? `${astroFile}?${ASTRO_VARIANT_MARKER}=1`
+      : astroFile
+    : null
+
+  // SSR human cloak: no allowed Referer + no grant cookie → ErrorScreen.
+  if (
+    request &&
+    isAstroLandingEntry &&
+    !wantsCrawlerVariant &&
+    !isLocalTestingUnlocked()
+  ) {
+    const hasGrant = request.cookies.get(LANDING_ACCESS_COOKIE)?.value === "1"
+    const referer = request.headers.get("referer") ?? request.headers.get("referrer") ?? ""
+    const pageOrigin = request.nextUrl.origin
+    if (!hasGrant && !isAllowedSearchOrBacklinkReferrer(referer, pageOrigin)) {
+      return deniedBotErrorResponse(request)
+    }
+  }
+
+  const response =
+    astroTarget && request
+      ? NextResponse.rewrite(new URL(astroTarget, request.nextUrl))
+      : NextResponse.next({ request: { headers: requestHeaders } })
+
+  if (requestHeaders.get("x-crawler-seo-page") === "1" || wantsCrawlerVariant) {
     response.headers.set("x-crawler-seo-page", "1")
+    response.headers.set("Link", `<${SITE_HOMEPAGE_CANONICAL}>; rel="canonical"`)
     response.cookies.set("x-crawler-seo-page", "1", {
       httpOnly: true,
       path: "/",
@@ -69,7 +118,28 @@ function nextWithHeaders(requestHeaders: Headers, request?: NextRequest): NextRe
       sameSite: "lax",
     })
   }
-  const pathname = request?.nextUrl.pathname ?? requestHeaders.get("x-pathname") ?? ""
+
+  if (isAstroLandingEntry) {
+    const userAgent = requestHeaders.get("user-agent") ?? ""
+    response.cookies.set("landing_bot", CRAWLER_PATTERN.test(userAgent) ? "1" : "0", {
+      httpOnly: false,
+      path: "/",
+      maxAge: 60,
+      sameSite: "lax",
+    })
+    response.cookies.set(
+      "landing_geo",
+      requestHeaders.get(GEO_US_ONLY_HEADER) ?? "unknown",
+      { httpOnly: false, path: "/", maxAge: 60, sameSite: "lax" },
+    )
+    response.cookies.set("landing_local_testing", isLocalTestingUnlocked() ? "1" : "0", {
+      httpOnly: false,
+      path: "/",
+      maxAge: 60,
+      sameSite: "lax",
+    })
+  }
+
   if (request && !pathname.startsWith("/api") && !pathname.startsWith("/_next")) {
     applyNavProofCookie(response)
   }
@@ -104,7 +174,8 @@ function isPublicAssetPath(pathname: string): boolean {
   return (
     PUBLIC_BRAND_ASSETS.has(pathname) ||
     pathname.startsWith("/styles/") ||
-    pathname.startsWith("/scraped/")
+    pathname.startsWith("/scraped/") ||
+    pathname.startsWith("/_astro/")
   )
 }
 
@@ -442,6 +513,6 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|error-icon\\.png|favicon\\.ico|favicon\\.png|icon-48x48\\.png|icon-32x32\\.png|apple-touch-icon\\.png|og-image\\.png|styles/|scraped/|yandex_[0-9a-f]+\\.html).*)",
+    "/((?!_next/static|_next/image|error-icon\\.png|favicon\\.ico|favicon\\.png|icon-48x48\\.png|icon-32x32\\.png|apple-touch-icon\\.png|og-image\\.png|styles/|scraped/|_astro/|yandex_[0-9a-f]+\\.html).*)",
   ],
 }
